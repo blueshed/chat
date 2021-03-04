@@ -1,0 +1,9 @@
+*.pyc
+*.DS_Store
+/client
+/images
+/nenv
+/venv
+readme.md
+docker-compose.yml
+Makefile

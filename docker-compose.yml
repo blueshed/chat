@@ -1,0 +1,11 @@
+version: '3'
+services:
+  web:
+    build: .
+    volumes:
+        - .:/app
+    image: chat:latest
+    container_name: chat
+    ports:
+      - "8080:80"
+    command: python -m chat.main --port=80 --debug=true
