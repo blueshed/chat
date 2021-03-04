@@ -5,4 +5,4 @@ setup:
 	source venv/bin/activate \
 		&& python -m pip install -q -U pip \
 		&& pip install nodeenv tornado \
-		&& if [ ! -d nenv ] ; then nodeenv nenv ; fi
+		&& if [ ! -d nenv ] ; then nodeenv nenv; fi

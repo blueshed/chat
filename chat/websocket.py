@@ -1,12 +1,12 @@
 """ our websocket handler """
 import logging
-import tornado.websocket
+from tornado.websocket import WebSocketHandler
 
 log = logging.getLogger(__name__)
 
 
-class Websocket(tornado.websocket.WebSocketHandler):
-    """ a websocket handler that broadcast messages to all clients """
+class Websocket(WebSocketHandler):
+    """ a websocket handler that broadcasts to all clients """
 
     clients = []
 

@@ -1,7 +1,7 @@
 """ our entry point """
 import logging
 import tornado.ioloop
-import tornado.web
+from tornado.web import Application
 from tornado.options import define, options, parse_command_line
 from .websocket import Websocket
 
@@ -13,7 +13,7 @@ define('port', type=int, default=8080, help='port to listen on')
 
 def make_app():
     """ make an application """
-    return tornado.web.Application(
+    return Application(
         [
             (r'/ws', Websocket),
             (

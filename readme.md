@@ -12,11 +12,13 @@ along with outrageous misuse of tools and bad engineering - where is the linting
 formating, testing, documentation and the rest? If asked I can drum up the
 pylint, axblack, pytest, sphinx, but I won't use rest; rpcs for me.
 
-To start we create a Makefile - it's steps are simple if you don't have Make:
+To start we create a Makefile - its steps are simple if you don't have Make:
 
 - create a virtual environment called venv
 - activate and install nodeenv and tornado
 - create a node virtual environment called nenv
+
+## Makefile
 
 ```bash
     setup:
@@ -59,12 +61,13 @@ We'll use two handlers: Websocket and StaticFileHandler.
 ```python
 """ our websocket handler """
 import logging
-import tornado.websocket
+from tornado.websocket import WebSocketHandler
 
 log = logging.getLogger(__name__)
 
-class Websocket(tornado.websocket.WebSocketHandler):
-    """ a websocket handler that broadcast messages to all clients """
+
+class Websocket(WebSocketHandler):
+    """ a websocket handler that broadcasts to all clients """
 
     clients = []
 
@@ -105,7 +108,7 @@ the `check_origin` method tornado would return a 403 error.
 """ our entry point """
 import logging
 import tornado.ioloop
-import tornado.web
+from tornado.web import Application
 from tornado.options import define, options, parse_command_line
 from .websocket import Websocket
 
@@ -117,7 +120,7 @@ define('port', type=int, default=8080, help='port to listen on')
 
 def make_app():
     """ make an application """
-    return tornado.web.Application(
+    return Application(
         [
             (r'/ws', Websocket),
             (
