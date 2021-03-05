@@ -464,4 +464,4 @@ say: "this is cool!" or "I couldn't be bothered".
 Next time we'll add authentication and persistence with SQLAlchemy, and extend
 our Websocket to use `json-rpc`.
 
-The source is on [https://gihub.com/blueshed/chat#engineering](https://gihub.com/blueshed/chat#engineering)
+The source is on [https://github.com/blueshed/chat/tree/engineering](https://github.com/blueshed/chat/tree/engineering)
