@@ -342,4 +342,4 @@ possible by a simple ioloop running testable functions.
 </p>
 
 The project is available at:
-[https://github.com/blueshed/chat](https://github.com/blueshed/chat)
+[https://github.com/blueshed/chat/tree/article1](https://github.com/blueshed/chat/tree/article1)
