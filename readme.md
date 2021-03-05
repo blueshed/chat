@@ -12,10 +12,10 @@ are excellent too, such as VS Code, Eclipse and PyCharm. Atom has plug-ins to
 make it a usable python ide: language-python, python-black, linter-pylint,
 platformio-ide-terminal, to name but a few.
 
-By enginerring I mean tested, consistent, documented code. So let's start
+By engineering I mean tested, consistent, documented code. So let's start
 setting up some tools to make this less daunting.
 
-In this artcle I'll be concentrating on python and cover javascript in
+In this artcile I'll be concentrating on python and cover javascript in
 another article when I address my appalling gui.
 
 <p align="center">
