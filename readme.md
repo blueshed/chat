@@ -18,6 +18,10 @@ setting up some tools to make this less daunting.
 In this artcle I'll be concentrating on python and cover javascript in
 another article when I address my appalling gui.
 
+<p align="center">
+  <img alt="chat package" src="images/py-tools.png" width="360">
+</p>
+
 The tools:
 
 - invoke - how to make a command line tools
