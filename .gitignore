@@ -1,4 +1,8 @@
 *.pyc
 .DS_Store
+.benchmarks
+.pytest_cache
+.coverage
 /nenv
 /venv
+/docsrc/_build

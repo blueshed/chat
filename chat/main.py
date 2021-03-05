@@ -26,16 +26,21 @@ def make_app():
     )
 
 
-def main():
+def main():  # pragma nocover
     """ parse command line, make and start """
-    tornado.options.parse_command_line()
+    parse_command_line()
     app = make_app()
     app.listen(options.port)
     log.info('listening on port: %s', options.port)
     if options.debug:
         log.warning('running in debug mode')
-    tornado.ioloop.IOLoop.current().start()
+    ioloop = tornado.ioloop.IOLoop.current()
+    try:
+        ioloop.start()
+    except (KeyboardInterrupt, SystemExit):
+        # graceful shutdown
+        ioloop.stop()
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pragma nocover

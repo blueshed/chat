@@ -1,0 +1,39 @@
+:mod:`chat.main`
+================
+
+.. py:module:: chat.main
+
+.. autoapi-nested-parse::
+
+   our entry point 
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   chat.main.make_app
+   chat.main.main
+
+
+.. data:: log
+   
+
+   
+
+.. function:: make_app()
+
+   make an application 
+
+
+.. function:: main()
+
+   parse command line, make and start 
+
+

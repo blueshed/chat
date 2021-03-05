@@ -1,0 +1,61 @@
+:mod:`chat.websocket`
+=====================
+
+.. py:module:: chat.websocket
+
+.. autoapi-nested-parse::
+
+   our websocket handler 
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   chat.websocket.Websocket
+
+
+
+.. data:: log
+   
+
+   
+
+.. class:: Websocket(application: tornado.web.Application, request: tornado.httputil.HTTPServerRequest, **kwargs: Any)
+
+
+   Bases: :class:`tornado.websocket.WebSocketHandler`
+
+   a websocket handler that broadcasts to all clients 
+
+   .. attribute:: clients
+      :annotation: = []
+
+      
+
+   .. method:: check_origin(self, origin)
+
+      in development allow ws from anywhere 
+
+
+   .. method:: open(self, *args, **kwargs)
+
+      we connected 
+
+
+   .. method:: on_close(self)
+
+      we're done 
+
+
+   .. method:: on_message(self, message)
+
+      we've said something, tell everyone 
+
+
+

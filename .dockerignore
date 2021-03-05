@@ -1,9 +1,17 @@
 *.pyc
 *.DS_Store
+.benchmarks
+.pytest_cache
+.coverage
 /client
+/docs
+/docsrc
 /images
 /nenv
+/tests
 /venv
 readme.md
 docker-compose.yml
 Makefile
+setup.cfg
+tasks.py
