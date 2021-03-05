@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chat.websocket &#8212; Chat 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="prev" title="chat.main" href="../main/index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-chat.websocket">
+<span id="chat-websocket"></span><h1><a class="reference internal" href="#module-chat.websocket" title="chat.websocket"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.websocket</span></code></a><a class="headerlink" href="#module-chat.websocket" title="Permalink to this headline">¶</a></h1>
+<p>our websocket handler</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#chat.websocket.Websocket" title="chat.websocket.Websocket"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Websocket</span></code></a></p></td>
+<td><p>a websocket handler that broadcasts to all clients</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt id="chat.websocket.log">
+<code class="sig-prename descclassname"><span class="pre">chat.websocket.</span></code><code class="sig-name descname"><span class="pre">log</span></code><a class="reference internal" href="../../../_modules/chat/websocket.html#log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="chat.websocket.Websocket">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">chat.websocket.</span></code><code class="sig-name descname"><span class="pre">Websocket</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.web.Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.httputil.HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tornado.websocket.WebSocketHandler</span></code></p>
+<p>a websocket handler that broadcasts to all clients</p>
+<dl class="py attribute">
+<dt id="chat.websocket.Websocket.clients">
+<code class="sig-name descname"><span class="pre">clients</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[]</span></em><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket.clients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket.clients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="chat.websocket.Websocket.check_origin">
+<code class="sig-name descname"><span class="pre">check_origin</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket.check_origin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket.check_origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>in development allow ws from anywhere</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.websocket.Websocket.open">
+<code class="sig-name descname"><span class="pre">open</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>we connected</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.websocket.Websocket.on_close">
+<code class="sig-name descname"><span class="pre">on_close</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket.on_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket.on_close" title="Permalink to this definition">¶</a></dt>
+<dd><p>we’re done</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.websocket.Websocket.on_message">
+<code class="sig-name descname"><span class="pre">on_message</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/websocket.html#Websocket.on_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.websocket.Websocket.on_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>we’ve said something, tell everyone</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/favicon.ico" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">  chat</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat</span></code></a><ul>
+      <li>Previous: <a href="../main/index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.main</span></code></a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Peter Bunyan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../../_sources/autoapi/chat/websocket/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

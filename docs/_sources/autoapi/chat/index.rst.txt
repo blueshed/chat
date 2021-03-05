@@ -1,0 +1,16 @@
+:mod:`chat`
+===========
+
+.. py:module:: chat
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   main/index.rst
+   websocket/index.rst
+
+

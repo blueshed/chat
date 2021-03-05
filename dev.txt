@@ -1,0 +1,16 @@
+-r requirements.txt
+invoke
+pytest
+pytest-coverage
+pytest-benchmark
+pytest-tornasync
+pylint
+axblack
+pyyaml
+sphinx
+recommonmark
+sphinx-autoapi
+bumpversion
+wheel
+twine
+nodeenv

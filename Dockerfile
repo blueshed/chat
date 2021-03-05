@@ -7,7 +7,9 @@ RUN mkdir /install
 
 WORKDIR /install
 
-RUN pip install --prefix=/install tornado
+COPY requirements.txt /requirements.txt
+
+RUN pip install --prefix=/install -r /requirements.txt
 
 FROM base
 
