@@ -66,3 +66,4 @@ def docker(ctx):
     """ build & run our docker server """
     ctx.run('docker-compose build')
     ctx.run('docker-compose up')
+    ctx.run('docker-compose down')

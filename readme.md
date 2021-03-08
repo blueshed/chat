@@ -455,10 +455,11 @@ def docker(ctx):
     """ build & run our docker server """
     ctx.run('docker-compose build')
     ctx.run('docker-compose up')
+    ctx.run('docker-compose down')
 ```
 
 Calling `inv docker` will build, test it all, and then run the docker
-container. You should see the chat site as [http://localhost:8080](http://localhost:8080).
+container. You should see the chat site at [http://localhost:8080](http://localhost:8080).
 
 For every choice made here there are a myriad of alternatives available. These
 are merely the expression of what has stuck with me through my practice. As I continue to
@@ -468,4 +469,4 @@ say: "this is cool!" or "I couldn't be bothered".
 Next time we'll add authentication and persistence with SQLAlchemy, and extend
 our Websocket to use `json-rpc`.
 
-The source is on [https://github.com/blueshed/chat/tree/engineering](https://github.com/blueshed/chat/tree/engineering)
+The source is on [https://github.com/blueshed/chat/tree/article2](https://github.com/blueshed/chat/tree/article2)
