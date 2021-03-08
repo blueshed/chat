@@ -10,7 +10,10 @@ Submodules
    :titlesonly:
    :maxdepth: 1
 
+   login/index.rst
    main/index.rst
+   static_handler/index.rst
+   tables/index.rst
    websocket/index.rst
 
 

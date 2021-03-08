@@ -1,0 +1,24 @@
+:mod:`chat.tables`
+==================
+
+.. py:module:: chat.tables
+
+.. autoapi-nested-parse::
+
+   our sqlalchemy schema 
+
+
+
+Module Contents
+---------------
+
+.. data:: metadata
+   
+
+   
+
+.. data:: user
+   
+
+   
+

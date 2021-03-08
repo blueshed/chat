@@ -1,11 +1,13 @@
 """ our websocket handler """
+import json
 import logging
 from tornado.websocket import WebSocketHandler
+from .login import UserMixin
 
 log = logging.getLogger(__name__)
 
 
-class Websocket(WebSocketHandler):
+class Websocket(UserMixin, WebSocketHandler):
     """ a websocket handler that broadcasts to all clients """
 
     clients = []
@@ -18,7 +20,12 @@ class Websocket(WebSocketHandler):
 
     def open(self, *args, **kwargs):
         """ we connected """
-        log.info('WebSocket opened')
+        if self.current_user is None:
+            self.close(401, 'not authenticated')
+            return
+        email = self.current_user['email']
+        log.info('WebSocket opened: %s', email)
+        self.write_message(email)
         self.clients.append(self)
 
     def on_close(self):
@@ -29,5 +36,7 @@ class Websocket(WebSocketHandler):
 
     def on_message(self, message):
         """ we've said something, tell everyone """
+        email = self.current_user['email']
+        message = json.dumps({'user': email, 'message': message})
         for client in self.clients:
             client.write_message(message)

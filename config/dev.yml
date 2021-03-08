@@ -1,0 +1,12 @@
+---
+# our settings for sqlalchemy.create_engine
+sa:
+    url: sqlite:///chat.db
+    echo: False
+    future: True
+
+# our settings for tornado.we.Application
+tornado:
+    cookie_name: chat-user
+    cookie_secret: I do like your hat.
+    login_url: /login

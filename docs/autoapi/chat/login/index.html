@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chat.login &#8212; Chat 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="chat.main" href="../main/index.html" />
+    <link rel="prev" title="chat" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-chat.login">
+<span id="chat-login"></span><h1><a class="reference internal" href="#module-chat.login" title="chat.login"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.login</span></code></a><a class="headerlink" href="#module-chat.login" title="Permalink to this headline">¶</a></h1>
+<p>our login handler</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#chat.login.UserMixin" title="chat.login.UserMixin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMixin</span></code></a></p></td>
+<td><p>for use by authenticated handlers</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#chat.login.LoginHandler" title="chat.login.LoginHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LoginHandler</span></code></a></p></td>
+<td><p>handle login get and post</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#chat.login.LogoutHandler" title="chat.login.LogoutHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogoutHandler</span></code></a></p></td>
+<td><p>Removes the cookie from application settings</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt id="chat.login.log">
+<code class="sig-prename descclassname"><span class="pre">chat.login.</span></code><code class="sig-name descname"><span class="pre">log</span></code><a class="reference internal" href="../../../_modules/chat/login.html#log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="chat.login.UserMixin">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">chat.login.</span></code><code class="sig-name descname"><span class="pre">UserMixin</span></code><a class="reference internal" href="../../../_modules/chat/login.html#UserMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.UserMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>for use by authenticated handlers</p>
+<dl class="py method">
+<dt id="chat.login.UserMixin.cookie_name">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">cookie_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#UserMixin.cookie_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.UserMixin.cookie_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the cookie_name declared in application settings</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.login.UserMixin.get_current_user">
+<code class="sig-name descname"><span class="pre">get_current_user</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#UserMixin.get_current_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.UserMixin.get_current_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the current user from the cookie</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="chat.login.LoginHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">chat.login.</span></code><code class="sig-name descname"><span class="pre">LoginHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.web.Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.httputil.HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LoginHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LoginHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#chat.login.UserMixin" title="chat.login.UserMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">chat.login.UserMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tornado.web.RequestHandler</span></code></p>
+<p>handle login get and post</p>
+<dl class="py method">
+<dt id="chat.login.LoginHandler.get">
+<code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LoginHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LoginHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>render the form</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.login.LoginHandler.post">
+<em class="property"><span class="pre">async</span> </em><code class="sig-name descname"><span class="pre">post</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LoginHandler.post"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LoginHandler.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>handle login post</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.login.LoginHandler.login">
+<em class="property"><span class="pre">async</span> </em><code class="sig-name descname"><span class="pre">login</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LoginHandler.login"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LoginHandler.login" title="Permalink to this definition">¶</a></dt>
+<dd><p>can we login ?</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="chat.login.LogoutHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">chat.login.</span></code><code class="sig-name descname"><span class="pre">LogoutHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.web.Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.httputil.HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LogoutHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LogoutHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#chat.login.UserMixin" title="chat.login.UserMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">chat.login.UserMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tornado.web.RequestHandler</span></code></p>
+<p>Removes the cookie from application settings
+and redirects.</p>
+<dl class="py method">
+<dt id="chat.login.LogoutHandler.get">
+<code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/login.html#LogoutHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.login.LogoutHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes cookie and redirects to optional next argument</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/favicon.ico" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">  chat</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat</span></code></a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat</span></code></a></li>
+      <li>Next: <a href="../main/index.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.main</span></code></a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Peter Bunyan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../../_sources/autoapi/chat/login/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

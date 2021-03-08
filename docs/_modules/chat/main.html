@@ -35,39 +35,62 @@
 <span></span><span class="sd">&quot;&quot;&quot; our entry point &quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">tornado.ioloop</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
 <span class="kn">from</span> <span class="nn">tornado.web</span> <span class="kn">import</span> <span class="n">Application</span>
 <span class="kn">from</span> <span class="nn">tornado.options</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">parse_command_line</span>
+<span class="kn">from</span> <span class="nn">.login</span> <span class="kn">import</span> <span class="n">LoginHandler</span><span class="p">,</span> <span class="n">LogoutHandler</span>
 <span class="kn">from</span> <span class="nn">.websocket</span> <span class="kn">import</span> <span class="n">Websocket</span>
+<span class="kn">from</span> <span class="nn">.static_handler</span> <span class="kn">import</span> <span class="n">AuthStaticFileHandler</span>
 
 <div class="viewcode-block" id="log"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.log">[docs]</a><span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 <span class="n">define</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;auto reload&#39;</span><span class="p">)</span>
 <span class="n">define</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">8080</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;port to listen on&#39;</span><span class="p">)</span>
+<span class="n">define</span><span class="p">(</span><span class="s1">&#39;cfg&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;config/dev.yml&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;config path&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="make_app"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.make_app">[docs]</a><span class="k">def</span> <span class="nf">make_app</span><span class="p">():</span>
+<div class="viewcode-block" id="make_app"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.make_app">[docs]</a><span class="k">def</span> <span class="nf">make_app</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; make an application &quot;&quot;&quot;</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="o">**</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;sa&#39;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">Application</span><span class="p">(</span>
         <span class="p">[</span>
             <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/ws&#39;</span><span class="p">,</span> <span class="n">Websocket</span><span class="p">),</span>
+            <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="n">LoginHandler</span><span class="p">),</span>
+            <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="n">LogoutHandler</span><span class="p">),</span>
             <span class="p">(</span>
                 <span class="sa">r</span><span class="s1">&#39;/(.*)&#39;</span><span class="p">,</span>
-                <span class="n">tornado</span><span class="o">.</span><span class="n">web</span><span class="o">.</span><span class="n">StaticFileHandler</span><span class="p">,</span>
-                <span class="p">{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="s1">&#39;chat/static&#39;</span><span class="p">,</span> <span class="s1">&#39;default_filename&#39;</span><span class="p">:</span> <span class="s1">&#39;index.html&#39;</span><span class="p">},</span>
+                <span class="n">AuthStaticFileHandler</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="s1">&#39;chat/static&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;default_filename&#39;</span><span class="p">:</span> <span class="s1">&#39;index.html&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;allow&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;favicon.ico&#39;</span><span class="p">],</span>
+                <span class="p">},</span>
             <span class="p">),</span>
         <span class="p">],</span>
-        <span class="n">debug</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span></div>
+        <span class="n">debug</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
+        <span class="n">engine</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tornado&#39;</span><span class="p">]</span></div>
     <span class="p">)</span>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>  <span class="c1"># pragma nocover</span>
     <span class="sd">&quot;&quot;&quot; parse command line, make and start &quot;&quot;&quot;</span>
     <span class="n">parse_command_line</span><span class="p">()</span>
-    <span class="n">app</span> <span class="o">=</span> <span class="n">make_app</span><span class="p">()</span>
+
+    <span class="c1"># load settings</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;settings path: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="c1"># make app</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">make_app</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;listening on port: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;running in debug mode&#39;</span><span class="p">)</span>
+
+    <span class="c1"># start app</span>
     <span class="n">ioloop</span> <span class="o">=</span> <span class="n">tornado</span><span class="o">.</span><span class="n">ioloop</span><span class="o">.</span><span class="n">IOLoop</span><span class="o">.</span><span class="n">current</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ioloop</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>

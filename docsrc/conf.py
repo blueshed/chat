@@ -63,5 +63,6 @@ html_theme_options = {'logo': 'favicon.ico'}
 
 autoapi_dirs = ['../chat']
 autoapi_type = 'python'
+autoapi_ignore = ['*/chat/scripts/*']
 autodoc_typehints = 'description'
 autoapi_add_toctree_entry = False

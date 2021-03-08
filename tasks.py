@@ -1,6 +1,7 @@
+# pylint: disable=C0415
 """ our dev tasks """
-from invoke import task
 import webbrowser
+from invoke import task
 
 
 @task(help={'debug': 'run in hot-reload mode'})
@@ -24,7 +25,7 @@ def build(ctx):
 @task
 def lint(ctx):
     """ run axblack and pylint """
-    ctx.run('black chat')
+    ctx.run('black chat tests')
     ctx.run('pylint chat')
 
 
@@ -63,6 +64,45 @@ def cheatsheet(_):
 
 @task(pre=[lint, build, test, docs_build])
 def docker(ctx):
-    """ build & run our docker server """
+    """ build & run our docker server, then tidy up. """
     ctx.run('docker-compose build')
     ctx.run('docker-compose up')
+    ctx.run('docker-compose down')
+
+
+@task
+def db_revise(ctx, message, name='chatdb', auto=False):
+    """ create a revision """
+    autogenerate = ' --autogenerate' if auto else ''
+    ctx.run(
+        f'alembic -c setup.cfg -n {name} revision -m {message!r}{autogenerate}'
+    )
+
+
+@task
+def db_upgrade(ctx, name='chatdb', revision='head'):
+    """ upgrade db """
+    ctx.run(f'alembic -c setup.cfg -n {name} upgrade {revision}')
+
+
+@task
+def db_downgrade(ctx, name='chatdb', revision='base'):
+    """ downgrade db """
+    ctx.run(f'alembic -c setup.cfg -n {name} downgrade {revision}')
+
+
+@task
+def register(_, email, password, name='chatdb'):
+    """ load settings, create engine and insert user """
+    import configparser
+    from sqlalchemy import create_engine, insert
+    from chat import tables
+
+    config = configparser.ConfigParser()
+    config.read('setup.cfg')
+    engine = create_engine(config[name]['sqlalchemy.url'], future=True)
+    with engine.connect() as conn:
+        conn.execute(
+            insert(tables.user).values(email=email, password=password)
+        )
+        conn.commit()

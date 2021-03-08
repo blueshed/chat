@@ -3,6 +3,9 @@
 .benchmarks
 .pytest_cache
 .coverage
+/config/local.yml
 /nenv
 /venv
 /docsrc/_build
+/tests/chat-test.db
+chat.db

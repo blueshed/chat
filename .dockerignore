@@ -4,6 +4,7 @@
 .pytest_cache
 .coverage
 /client
+/config/local.yml
 /docs
 /docsrc
 /images

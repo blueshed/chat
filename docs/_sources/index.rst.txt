@@ -6,6 +6,9 @@
 Welcome to Chat's documentation!
 ================================
 
+A simple Tornado chat server with a Vue client.
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

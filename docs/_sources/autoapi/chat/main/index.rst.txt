@@ -27,7 +27,7 @@ Functions
 
    
 
-.. function:: make_app()
+.. function:: make_app(settings)
 
    make an application 
 

@@ -1,471 +1,455 @@
-# Realtime Chat Engineered
+# Realtime Chat Persisted
 
 <p align="center">
   <img alt="chat package" src="images/two-windows.png" width="1001">
 </p>
 
-This article is a follow on from [Realtime Chat with Vite, Vue3 and Python
+This article is the third in the series [Realtime Chat with Vite, Vue3 and Python
 Tornado](https://pspddo.medium.com/realtime-chat-with-vite-vue3-and-python-tornado-31c8085253af).
-In that article I suggested that I could provide a view of
-pylint, axblack, pytest and sphinx. I use [Atom](https://atom.io/), but others
-are excellent too, such as VS Code, Eclipse and PyCharm. Atom has plug-ins to
-make it a usable python ide: language-python, python-black, linter-pylint,
-platformio-ide-terminal, to name but a few.
+In this article we'd add SQLAlchemy persistence and authentication to our chat app.
 
-By enginerring I mean tested, consistent, documented code. So let's start
-setting up some tools to make this less daunting.
+So tooling up, we need to add [alembic](https://alembic.sqlalchemy.org/en/latest/)
+to our `dev.txt` and [sqlalchemy](https://docs.sqlalchemy.org/en/14/) to our
+`requirements.txt`. (NB. At the time of writing SQLAlchemy 1.4.0b3 was in beta
+and so the actual entry in `requirements.txt` was `--pre sqlalchemy`).
 
-In this artcle I'll be concentrating on python and cover javascript in
-another article when I address my appalling gui.
+Having done that, we can call `make setup` to install the new packages.
 
-<p align="center">
-  <img alt="chat package" src="images/py-tools.png" width="360">
-</p>
+## SQLAlchemy
 
-The tools:
-
-- invoke - how to make a command line tools
-- axblack - double quote comments and single quote code
-- pylint - express your divergence from the expected
-- pytest - make it work, make sure its all working, and performant
-- sphinx - let other follow along after you've forgotten
-
-To place these tools into our environment we'll adapt our use of pip. We'll
-create two files to express the development and production configurations of
-python: dev.txt and requirements.txt. Dev will be used by our Makefile and
-Requirements by our Dockerfile.
-
-## requirements.txt
+This package supports two flavours of persistence: an object relational mapper
+and an expression language. We'll use the expression language. Create a
+modules `chat/tables.py` and its contents:
 ```
-tornado
+""" our sqlalchemy schema """
+from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
+
+
+metadata = MetaData()
+
+
+user = Table(
+    'user',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('email', String(128), nullable=False, unique=True),
+    Column('password', String(60), nullable=False),
+    Column('profile', JSON),
+)
 ```
 
-## dev.txt
-```
--r requirements.txt
-invoke
-pytest
-pytest-coverage
-pytest-benchmark
-pytest-tornasync
-pylint
-axblack
-pyyaml
-sphinx
-recommonmark
-sphinx-autoapi
-bumpversion
-wheel
-twine
-nodeenv
-```
 
-NB. you should be putting version numbers beside these requirement packages.
-At the time of writing I was actually using tornado==6.1 - `pip freeze` will
-tell you what you've actually got. During development I leave them off so as
-to test for conflicts on the latest versions; if I find any, I lock down.
+## Alembic
 
-## Makefile
-```bash
-setup:
-	if which python3 && [ ! -d venv ] ; then python3 -m venv venv ; fi
-	source venv/bin/activate \
-		&& python -m pip install -q -U pip \
-		&& pip install -r dev.txt \
-		&& if [ ! -d nenv ] ; then nodeenv nenv; fi
-```
-
-We've told pip to use our `dev.txt` which includes our `requirements.txt` - no
-duplication wherever possible. By running `make setup`, your environment will
-be updated to contain the new packages.
-
-## Dockerfile
-
-I alluded to docker in the previous article. It's simple to setup with
-two files: `Dockerfile`, `docker-compose.yml`. The first describes your
-container and the second enables you to run it locally.
-
-```
-
-FROM python:3-alpine as base
-
-FROM base as builder
-
-RUN mkdir /install
-
-WORKDIR /install
-
-COPY requirements.txt /requirements.txt
-
-RUN pip install --prefix=/install -r /requirements.txt
-
-FROM base
-
-COPY --from=builder /install /usr/local
-
-COPY . /app
-
-WORKDIR /app
-
-# Make port 80 available to the world outside this container
-EXPOSE 80
-
-CMD ["python", "-m", "chat.main", "--port=80"]
-```
-
-Our Docker file uses multi-phase build to extend the base python image
-with our requirements.txt and then layered atop is our app. We expose
-a web port and specify our command to run the app.
-
-## docker-compose.yml
-```yml
-version: '3'
-services:
-  web:
-    build: .
-    volumes:
-        - .:/app
-    image: chat:latest
-    container_name: chat
-    ports:
-      - "8080:80"
-    command: python -m chat.main --port=80 --debug=true
-```
-
-Here we declare our build and run-time environment. We map our project
-directory to our container's app directory for hot-reloading and map
-a local port to a container port so that our browsers can see the app.
-We also override the command with a debug option so we can see our
-changes should we make them.
-
-To run the container: `docker-compose build`, followed by `docker-compose up`.
-
-## Invoke
-
-Invoke is a marvellous tool for those who cannot remember command line interfaces.
-You can write simple macros to do all your dev tasks. Just create a `tasks.py`
-in the root of your project:
+This package manages the migration of our database in response to changes in
+our code. It is a tool used in setup and testing. It plays no part in runtime.
+Not all databases support all of its features, but we'll avoid the obvious one,
+such as removing a column from a table in sqlite. Alemic is a command line
+tool and as such I'll need some additions to `tasks.py` to remember all the
+syntax.
 
 ## tasks.py
 ```python
-""" our dev tasks """
-from invoke import task
-
-
-@task(help={'debug': 'run in hot-reload mode'})
-def server(ctx, debug=False):
-    """ run our python server """
-    ctx.run(f'python -m chat.main --debug={debug}')
+@task
+def db_revise(ctx, message, name='chatdb', auto=False):
+    """ create a revision """
+    autogenerate = ' --autogenerate' if auto else ''
+    ctx.run(f'alembic -c setup.cfg --name={name} revision -m {message!r}{autogenerate}')
 
 
 @task
-def client(ctx):
-    """ run our vite server """
-    ctx.run('. nenv/bin/activate && cd client && npm run dev')
+def db_upgrade(ctx, name='chatdb', revision='head'):
+    """ upgrade db """
+    ctx.run(f'alembic -c setup.cfg --name={name} upgrade {revision}')
 
 
 @task
-def build(ctx):
-    """ build our vue client """
-    ctx.run('. nenv/bin/activate && cd client && npm run build')
-
-
-@task
-def docker(ctx):
-    """ build & run our docker server """
-    ctx.run('docker-compose build')
-    ctx.run('docker-compose up')
+def db_downgrade(ctx, name='chatdb', revision='base'):
+    """ downgrade db """
+    ctx.run(f'alembic -c setup.cfg --name={name} downgrade {revision}')
 ```
 
-Activate your `venv` and you run `invoke -l` or the short-cut `inv -l`.
-You'll see the help text.
-```bash
-% . venv/bin/activate
-% inv -l
-Available tasks:
+These are the operations I perform and yet the tools is capable of so much
+more. Please check out the documentation.
 
-  build    build our vue client
-  client   run our vite server
-  docker   build & run our docker server
-  server   run our python server
+To begin we'll call `alembic init chat/scripts`. This will create a `scripts`
+directory inside you `chat` package. Since it has no `__init__.py`, python will
+not pick it up at runtime. Since projects can have many packages and this one
+has a persistence layer, I see no reason to separate them. Alembic requires
+two configuration parameters: the location of the scripts directory and the
+sqlalchemy connection url to the database. This information is usually held
+in the `alembic.ini`. We can dispose of it and put this information into our
+`setup.cfg`:
+```
+[chatdb]
+prepend_sys_path = .
+script_location = chat/scripts
+sqlalchemy.url = sqlite:///chat.db
 ```
 
-Notice that `invoke` is self documenting - try `inv --help server`. If
-we run our server now, it has a flag option for debug so we can run in
-debug mode by calling `inv server -d`.
-
-## setup.cfg
-
-Using all the tools we've installed we need to configure them. Each
-tool has its own config file, but most of them also look for `setup.cfg`.
-
+Now we need to tell `alembic` where to find our `metadata`. Edit
+`chat/scripts/env.py` and add this where `target_metadata` is defined:
 ```
-[pylint.'MESSAGES CONTROL']
-disable=
-    too-few-public-methods,
-    abstract-method
+import chat.tables
 
-[isort]
-line_length = 79
-
-[tool:pytest]
-addopts = -p no:warnings --capture=sys --cov chat --cov-report term-missing
-filterwarnings =
-    ignore::DeprecationWarning
-testpaths =
-    tests
+target_metadata = chat.tables.metadata
 ```
 
-This file holds the configurations for pylint, axblack and pytest. So let's
-use pylint and axblack.
+NB. Since our config provides no logging information you will need to comment
+out line 14 - `#fileConfig(config.config_file_name)`. If we need to set
+up logger we can do it later.
 
-## pylint & axblack
+Now we can run our task: `inv db-revise -a -m 'first pass'` to autogenerate
+a revision and `inv db-upgrade` to bring it up to date.
 
-black is a wonderful tool. Type away and it will clean up after you. Sadly,
-black itself goes for double quotes only. We live in a json world and snippets
-live in single quotes. So [axblack](https://pypi.org/project/axblack/) gives
-you the opinionation of black, but expects double quotes for comments and
-single quotes for code.
+## Testing
 
-We just add a task to `tasks.py`:
-```
-@task
-def lint(ctx):
-    """ run axblack and pylint """
-    ctx.run('black chat')
-    ctx.run('pylint chat')
-```
+Now test first and weep later - we need to test our database and our
+SQLAlchemy table. To do this we'll need to create a test database that
+uses alembic to prepare it. So lets first add to our `tests/conftest.py`:
 
-And to run it: `inv lint`. You should find unchanged files and 10.00/10!
-If not - fix it! Fixing it means either live with the badness and add to the
-`setup.cfg` and conform. Conforming is a contortion but following through
-I've found interesting changes to my code style, if nothing else.
-
-## pytest
-
-Pytest is the swiss army knife of python testing tools. With the extension
-in our dev.txt we will be able to test, determine coverage and performance
-and we have helpers for tornado and async code.
-
-First create a `tests` package and add a module: `tests/conftests.py`. This
-file will contain our `fixtures` - pytest's useful reusables for setting up tests.
-
-## conftests.py
 ```python
-""" our test fictures """
-import pytest
-from tornado.httpclient import HTTPRequest
-from tornado.websocket import websocket_connect
-from chat.main import make_app
+import configparser
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine
+
+def init_db(name='testdb'):
+    """ downgrade and upgrade db """
+    config = configparser.ConfigParser()
+    config.read('setup.cfg')
+    section = config[name]
+    alembic_config = Config()
+    alembic_config.set_main_option('sqlalchemy.url', section['sqlalchemy.url'])
+    alembic_config.set_main_option(
+        'script_location', section['script_location']
+    )
+    command.downgrade(alembic_config, 'base')
+    command.upgrade(alembic_config, 'head')
+    return section['sqlalchemy.url']
+
+
+@pytest.fixture(scope='session')
+def test_db():
+    """ returns sqlalchemy engine """
+    db_url = init_db()
+    engine = create_engine(db_url, echo=True, future=True)
+    return engine
+```
+
+We've stored our scripts and sqlalchemy.url in our `setup.cfg`. To
+declare a test database we clone the settings and the `init_db` function
+raids those settings to configure alembic. We `downgrade`, `upgrade` and
+return the sqlalchemy.url. Then our fixture calls `init_db` and creates
+our sqlalchemy engine. So how do we use this?
+
+## tests/test_user.py
+```python
+""" test our user table """
+from sqlalchemy import insert, select, update, delete
+from chat.tables import user
+
+
+def test_create(test_db):
+    """ insert admin user """
+    with test_db.connect() as conn:
+        stmt = insert(user).values(email='admin@test.com', password='admin')
+        result = conn.execute(stmt)
+        conn.commit()
+        assert result.inserted_primary_key[0] == 1
+
+        stmt = select(user).where(user.c.email == 'admin@test.com')
+        result = conn.execute(stmt).first()
+        assert result.email == 'admin@test.com'
+
+
+def test_update(test_db):
+    """ update admin user """
+    with test_db.connect() as conn:
+        stmt = select(user).where(user.c.email == 'admin@test.com')
+        result = conn.execute(stmt).first()
+        print(result)
+        assert result.email == 'admin@test.com'
+        stmt = (
+            update(user)
+            .where(user.c.id == result.id)
+            .values(profile={'foo': 'bar'})
+        )
+        result = conn.execute(stmt)
+        assert result.rowcount == 1
+        conn.commit()
+
+        stmt = select(user).where(user.c.email == 'admin@test.com')
+        result = conn.execute(stmt).first()
+        assert result.profile == {'foo': 'bar'}
+
+
+def test_delete(test_db):
+    """ let's delete admin """
+    with test_db.connect() as conn:
+        stmt = delete(user).where(user.c.email == 'admin@test.com')
+        result = conn.execute(stmt)
+        assert result.rowcount == 1
+        conn.commit()
+
+        stmt = select(user).where(user.c.email == 'admin@test.com')
+        result = conn.execute(stmt).first()
+        assert result is None
+```
+
+Running our tests now, `inv test`, should produce and output:
+```bash
+---------- coverage: platform darwin, python 3.8.7-final-0 -----------
+Name                Stmts   Miss  Cover   Missing
+-------------------------------------------------
+chat/__init__.py        0      0   100%
+chat/main.py           11      0   100%
+chat/tables.py          3      0   100%
+chat/websocket.py      19      0   100%
+-------------------------------------------------
+TOTAL                  33      0   100%
+```
+
+We're ready for authentication!
+
+## Authentication
+
+Tornado has the scafolding for Authentication. We'll do a simple
+local version and then point to the OAuth variations. Tornado
+uses a secure cookie, so we'll need to add settings to our
+Application instantiation.
+
+    - cookie_name the name we'll use for our session cookie
+    - cookie_secret the phase used to encrypt our cookie
+    - login_url where to go to login
+
+Since the command line would become too crowded with all these
+options, now is a good to address configuration.
+
+There are so many ways - we've aready used `setup.cfg`, but that is
+for development. So let's create a top level directory called `config`
+and create ourselves a `config/dev.yml` - not json as it does not
+support comments well, not configparser as it does not support dictionaries.
+The secret sauce to yml is `waddle` - a config package that support amazon
+aws encryption so you can check in your settings and no one can get your
+secrets. But that is too much for now, so this prepares for that step and
+is simple to setup.
+
+## config/dev.yml
+```yml
+---
+# our settings for sqlalchemy.create_engine
+sa:
+    url: sqlite:///chat.db
+    echo: False
+    future: True
+
+# our settings for tornado.we.Application
+tornado:
+    cookie_name: chat-user
+    cookie_sectet: I do like your hat.
+    login_url: /login
+```
+
+We'll adapt `chat/main.py`
+
+
+We'll look at configuration later, but for now just add these
+to `chat/main.py`:
+
+```python
+define('cfg', type=str, default='config/local.yml', help='config path')
+
+
+def make_app(settings):
+    """ make an application """
+    engine = create_engine(**settings['sa'])
+    return Application(
+        [
+            (r'/ws', Websocket),
+            (r'/login', LoginHandler),
+            (
+                r'/(.*)',
+                tornado.web.StaticFileHandler,
+                {'path': 'chat/static', 'default_filename': 'index.html'},
+            ),
+        ],
+        debug=options.debug,
+        engine=engine,
+        **settings['tornado']
+    )
+
+
+def main():  # pragma nocover
+    """ parse command line, make and start """
+    parse_command_line()
+
+    with open(options.cfg) as file:
+        settings = yaml.safe_load(file)
+
+    app = make_app(settings)
+```
+
+Notice, we've added and option for our config file, we've added
+settings as a parameter to `make_app`, we've added an `engine`
+setting to our application and there is a mysterious `LoginHandler` -
+we'll get there soon.
+
+Loading our settings in main is a simple `safe_load`. But `make_app`
+is also used in our `tests/conftest.py` - let's update that too:
+
+## tests/conftest.py  - revisited
+```python
+def init_db(settings):
+    """ downgrade and upgrade db """
+    alembic_config = Config()
+    alembic_config.set_main_option('sqlalchemy.url', settings['sa']['url'])
+    alembic_config.set_main_option(
+        'script_location', settings['sa_script_location']
+    )
+    command.downgrade(alembic_config, 'base')
+    command.upgrade(alembic_config, 'head')
+    return settings['sa']['url']
+
+
+@pytest.fixture(name='settings', scope='session')
+def load_settings():
+    """ return our settings """
+    config = configparser.ConfigParser()
+    config.read('setup.cfg')
+    section = config['testdb']
+    return {
+        'sa': {
+            'url': section['sqlalchemy.url'],
+            'echo': False,
+            'future': True,
+        },
+        'sa_script_location': section['script_location'],
+        'tornado': {
+            'cookie_name': 'test-chat-cookie',
+            'cookie_secret': 'test hat wearing',
+            'login_url': '/login',
+        },
+    }
+
+
+@pytest.fixture(scope='session')
+def test_db(settings):
+    """ returns sqlalchemy engine """
+    db_url = init_db(settings)
+    engine = create_engine(db_url, echo=True, future=True)
+    return engine
 
 
 @pytest.fixture
-def app():
+def app(settings):
     """ return a tornado application """
-    return make_app()
-
-
-@pytest.fixture
-async def ws_client(http_server, http_server_port):
-    """ return a websocket client """
-    request = HTTPRequest(f'ws://localhost:{http_server_port[1]}/ws')
-    result = await websocket_connect(request)
-    return result
+    return make_app(settings)
 ```
 
-We want to test our websocket and to do that we'll need an `app` fixture
-as required by `pytest-tornasync`. We also return the result of tornado's
-`websocket_connect` as documented [here](https://www.tornadoweb.org/en/stable/websocket.html).
+We've added a new fixture, `load_settings`, but we've given it a `name` attribute.
+This is to not conflict the namespace and keep our linter from jumping up and
+down at the bottom of the screen. As a parameter it is called `settings` and
+pytest is clever enough to make this possible. Our app is using settings and
+our test_db is using settings and settings is using `setup.cfg`. Our settings
+have a non-production addition of the alembic script location - and our production
+namespace is safe - no alembic.
 
-## tests/test_ws.py
+So having done configuration we can write a login handler!
+
+## login.py
+``` python
+""" our login handler """
+import json
+import logging
+from sqlalchemy import select
+from tornado.web import RequestHandler, HTTPError
+from . import tables
+
+log = logging.getLogger(__name__)
+
+
+class UserMixin:
+    """ for use by authenticated handlers """
+
+    @property
+    def cookie_name(self):
+        """ return the cookie_name declared in application settings"""
+        return self.settings.get('cookie_name')
+
+    def get_current_user(self):
+        """ return the current user from the cookie """
+        result = self.get_secure_cookie(self.cookie_name)
+        if result:
+            result = json.loads(result.decode('utf-8'))
+        return result
+
+
+class LoginHandler(UserMixin, RequestHandler):
+    """ handle login get and post """
+
+    def get(self, error=None):
+        """ render the form """
+        email = self.get_argument('email', default=None)
+        next_ = self.get_argument('next', '/')
+        self.render(
+            'login.html', email=email, error=error, next=next_,
+        )
+
+    async def post(self):
+        """ handle login post """
+        try:
+            email = self.get_argument('email', None)
+            password = self.get_argument('password', None)
+            submit = self.get_argument('submit', 'login')
+            if email is None or password is None:
+                raise HTTPError(403, 'email or password is None')
+            user = None
+            if submit == 'login':
+                user = await self.login(email, password)
+            if user:
+                self.set_current_user(user)
+                self.redirect(self.get_argument('next', '/'))
+            else:
+                raise Exception('email or password incorrect')
+        except Exception as ex:  # pylint: disable=W0703
+            log.exception(ex)
+            self.get(error=str(ex))
+
+    def set_current_user(self, value):
+        """ put the current user in the cookie """
+        if value:
+            self.set_secure_cookie(self.cookie_name, json.dumps(value))
+        else:
+            self.clear_cookie(self.cookie_name)
+
+    def login(self, email, password):
+        """ can we login ? """
+        user = None
+        engine = self.settings['engine']
+        with engine.connect() as conn:
+            stmt = select(tables.user).where(
+                tables.user.c.email == email, tables.user.c.password == password,
+            )
+            row = conn.execute(stmt).first()
+            if row:
+                user = {'id': row.id, 'email': row.email}
+        return user
+```
+
+Now we need to users to test. We'll call `inv db-revise -m 'test data'` and
+edit the generated file:
 ```python
-""" test websocket client """
-import asyncio
-
-
-async def test_ws(ws_client):
-    """ test message send and receive """
-
-    message = 'hello, world'
-
-    client = await ws_client
-    await client.write_message(message)
-    response = await client.read_message()
-    print(response)
-    assert response == message
-
-    client.close()
-    await asyncio.sleep(0.01)
-```
-
-To run the test call:
-```
-% pytest
-```
-
-NB. Fixtures are functions and they are called as they are marshalled into
-your test's arguments. Since our `ws_client` is a coroutine we end up
-with an awaitable. In our async test we can await the result. Other
-fixtures do not need this extra step.
-
-Our test is simple, we await our client, write a message, read a message
-and assert they are the same. Then we tidy up and... Our coverage is not
-100%. First I `#pragma nocover` the `chat.main.main` function and
-the `if __name__ == '__main__'` because they are tested all the time -
-but we have one more edge case that is not covered - CORS.
-To do this we have to fake a call from another domain.
-So we add the following fixture to `conftest.py`:
-
-```python
-@pytest.fixture
-async def ws_bad_client(http_server, http_server_port):
-    """ return a websocket client """
-    request = HTTPRequest(
-        f'ws://localhost:{http_server_port[1]}/ws',
-        headers={'Origin': 'http://locahost:3000'},
+def upgrade():
+    """ setup test users """
+    op.execute(
+        "INSERT INTO user (email, password) VALUES ('dog1@test.com', 'dog1')"
     )
-    result = await websocket_connect(request)
-    return result
-```
-
-The add the following two tests to `test_ws.py`:
-```python
-async def test_ws_cors_failure(ws_bad_client):
-    """ test message send and receive """
-
-    try:
-        await ws_bad_client
-        assert False, 'should have returned 403'
-    except HTTPClientError as ex:
-        assert ex.code == 403
-
-
-async def test_ws_cors_success(ws_bad_client, app):
-    """ test message send and receive """
-
-    message = 'hello, world'
-    app.settings['debug'] = True
-    client = await ws_bad_client
-    await client.write_message(message)
-    response = await client.read_message()
-    print(response)
-    assert response == message
-
-    client.close()
-    await asyncio.sleep(0.01)
-```
-
-Now running the test should produce 100% coverage!
-
-We'll create a task in `tasks.py` to help with our workflow.
-```python
-@task
-def test(ctx):
-    """ run our tests """
-    ctx.run('pytest')
-```
-
-## Sphinx
-
-Now that we can run and test our code, let's document it. Shinx is already
-in the `dev.txt` with some extension. To begin our sphinx project we'll call:
-```bash
-% mkdir docsrc
-% cd docsrc
-% sphinx quickstart
-```
-and answer all the questions (NB. defaults are good). First we have to
-add our extension to `docsrc/conf.py`:
-```
-extensions = [
-    'sphinx.ext.autodoc',
-    'recommonmark',
-    'sphinx.ext.viewcode',
-    'autoapi.extension',
-]
-```
-And at the bottom, configure our extensions, so add the following:
-```
-html_theme_options = {'logo': 'favicon.ico'}
-autoapi_dirs = ['../chat']
-autoapi_type = 'python'
-autodoc_typehints = 'description'
-autoapi_add_toctree_entry = False
-```
-
-And copy your favicon into the `docsrc/_static` directory. To support github,
-we'll build to a `docs` directory, so we'll add a target to the `docsrc/Makefile`.
-```
-github:
-	@make html
-	@cp -a _build/html/. ../docs
-```
-Finally, let's edit the `docsrc/index.rst` to add our autoapi to the
-table of contents:
-```rst
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-     chat <autoapi/chat/index>
-```
-
-Now we can add some tasks to `task.py` to make our docs.
-```python
-@task
-def docs_build(ctx):
-    """ build docs """
-    ctx.run('cd docsrc && make github')
-    ctx.run('touch ./docs/.nojekll')
-
-
-@task
-def docs_server(ctx, port='8081'):
-    """ run a server for the documents """
-    url = f'http://localhost:{port}'
-    print(f'doc-server at: {url}')
-    webbrowser.open(url)
-    ctx.run(
-        f'python3 -m http.server {port} --directory=./docsrc/_build/html/',
-        pty=True,
-    )
-
-
-@task
-def cheatsheet(_):
-    """ open the github rst-cheatsheet """
-    webbrowser.open(
-        'https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst'
+    op.execute(
+        "INSERT INTO user (email, password) VALUES ('dog2@test.com', 'dog2')"
     )
 ```
 
-To build call: `inv docs-build`. To see them, call: `inv docs-server`. Because
-I cannot rememeber syntax, I've added a `cheatsheet` task that provides help
-with `rst` syntax.
 
-Don't forget to update the `.gitignore` and the `.dockerignore` to not include
-build directories and the remains of testing.
-
-## Finally
-
-Let's bring it all together with our `docker` task.
-```python
-@task(pre=[lint, build, test, docs_build])
-def docker(ctx):
-    """ build & run our docker server """
-    ctx.run('docker-compose build')
-    ctx.run('docker-compose up')
-```
-
-Calling `inv docker` will build, test it all, and then run the docker
-container. You should see the chat site as [http://localhost:8080](http://localhost:8080).
-
-For every choice made here there are a myriad of alternatives available. These
-are merely the expression of what has stuck with me through my practice. As I continue to
-code, my nosiness and laziness will continue to evolve a combination of tools to
-say: "this is cool!" or "I couldn't be bothered".
-
-Next time we'll add authentication and persistence with SQLAlchemy, and extend
-our Websocket to use `json-rpc`.
-
-The source is on [https://github.com/blueshed/chat/tree/engineering](https://github.com/blueshed/chat/tree/engineering)
+The source is on [https://github.com/blueshed/chat/tree/persistence
+](https://github.com/blueshed/chat/tree/persistence)

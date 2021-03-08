@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Chat</title>
+    <style type="text/css" media="screen">
+        form {
+            max-width: 50%;
+            margin: 0 auto;
+        }
+
+        input {
+            font-size: larger;
+        }
+
+        .sep {
+            padding: 0.25rem;
+        }
+
+        .centered {
+            font-family: Avenir, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="centered">
+        <form action="/login" method="post">
+            <h1>Chat Login</h1>
+            <div class="column">
+                <input type="email" name="email" value="{{ email or '' }}" placeholder="email" autofocus>
+                <div class="sep"></div>
+                <input type="password" name="password" value="" placeholder="password">
+                <div class="sep"></div>
+                <input type="submit" name="submit" value="login">
+                <div class="sep"></div>
+                <input type="hidden" name="next" value="{{ next }}">
+            </div>
+            {%if error %}
+            <div class="error">
+                {{ error }}
+            </div>
+            {% end %}
+        </form>
+    </div>
+</body>
+
+</html>

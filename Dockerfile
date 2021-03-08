@@ -1,5 +1,5 @@
 
-FROM python:3-alpine as base
+FROM python:3-slim-buster as base
 
 FROM base as builder
 

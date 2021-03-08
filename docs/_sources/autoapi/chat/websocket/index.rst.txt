@@ -29,7 +29,7 @@ Classes
 .. class:: Websocket(application: tornado.web.Application, request: tornado.httputil.HTTPServerRequest, **kwargs: Any)
 
 
-   Bases: :class:`tornado.websocket.WebSocketHandler`
+   Bases: :class:`chat.login.UserMixin`, :class:`tornado.websocket.WebSocketHandler`
 
    a websocket handler that broadcasts to all clients 
 

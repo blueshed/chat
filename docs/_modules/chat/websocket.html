@@ -33,13 +33,15 @@
             
   <h1>Source code for chat.websocket</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot; our websocket handler &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">tornado.websocket</span> <span class="kn">import</span> <span class="n">WebSocketHandler</span>
+<span class="kn">from</span> <span class="nn">.login</span> <span class="kn">import</span> <span class="n">UserMixin</span>
 
 <div class="viewcode-block" id="log"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.log">[docs]</a><span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Websocket"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket">[docs]</a><span class="k">class</span> <span class="nc">Websocket</span><span class="p">(</span><span class="n">WebSocketHandler</span><span class="p">):</span>
+<div class="viewcode-block" id="Websocket"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket">[docs]</a><span class="k">class</span> <span class="nc">Websocket</span><span class="p">(</span><span class="n">UserMixin</span><span class="p">,</span> <span class="n">WebSocketHandler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; a websocket handler that broadcasts to all clients &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Websocket.clients"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket.clients">[docs]</a>    <span class="n">clients</span> <span class="o">=</span> <span class="p">[]</span></div>
@@ -52,7 +54,12 @@
 
 <div class="viewcode-block" id="Websocket.open"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; we connected &quot;&quot;&quot;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;WebSocket opened&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">401</span><span class="p">,</span> <span class="s1">&#39;not authenticated&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_user</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;WebSocket opened: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_message</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Websocket.on_close"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket.on_close">[docs]</a>    <span class="k">def</span> <span class="nf">on_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -63,6 +70,8 @@
 
 <div class="viewcode-block" id="Websocket.on_message"><a class="viewcode-back" href="../../autoapi/chat/websocket/index.html#chat.websocket.Websocket.on_message">[docs]</a>    <span class="k">def</span> <span class="nf">on_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; we&#39;ve said something, tell everyone &quot;&quot;&quot;</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_user</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">&#39;user&#39;</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span> <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">})</span>
         <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
             <span class="n">client</span><span class="o">.</span><span class="n">write_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div></div>
 </pre></div>
