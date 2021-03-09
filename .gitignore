@@ -3,6 +3,7 @@
 .benchmarks
 .pytest_cache
 .coverage
+.vscode
 /config/local.yml
 /nenv
 /venv

@@ -1,6 +1,8 @@
-""" our test fictures """
+# pylint: disable=unused-argument
+""" our test fixtures """
 import configparser
 import urllib.parse
+import os
 import pytest
 from alembic import command
 from alembic.config import Config
@@ -15,13 +17,21 @@ def init_db(settings):
     db_url = settings['sa']['url']
     alembic_config = Config()
     alembic_config.set_main_option('sqlalchemy.url', db_url)
-    alembic_config.set_main_option('script_location', settings['sa_script_location'])
-    command.downgrade(alembic_config, 'base')
+    alembic_config.set_main_option(
+        'script_location', settings['sa_script_location']
+    )
+    if db_url.startswith('sqlite:///'):
+        # sqlite does not like downgrading, zap it
+        os.unlink(db_url[len('sqlite:///') :])
+    else:
+        command.downgrade(alembic_config, 'base')
     command.upgrade(alembic_config, 'head')
 
     # load basic data
     engine = create_engine(db_url)
-    engine.execute('insert into user (email, password) values ("dog1@test.com","dog1")')
+    engine.execute(
+        'insert into user (email, password) values ("dog1@test.com","dog1")'
+    )
     return db_url
 
 
@@ -32,7 +42,11 @@ def load_settings():
     config.read('setup.cfg')
     section = config['testdb']
     return {
-        'sa': {'url': section['sqlalchemy.url'], 'echo': False, 'future': True,},
+        'sa': {
+            'url': section['sqlalchemy.url'],
+            'echo': False,
+            'future': True,
+        },
         'sa_script_location': section['script_location'],
         'tornado': {
             'cookie_name': 'test-chat-cookie',
@@ -56,8 +70,8 @@ def app(settings):
     return make_app(settings)
 
 
-@pytest.fixture
-async def cookie(settings, http_server, http_server_client):
+@pytest.fixture(name='cookie')
+async def get_cookie(settings, http_server, http_server_client):
     """ login to get a cookie """
     response = await http_server_client.fetch(
         settings['tornado']['login_url'],
@@ -88,7 +102,8 @@ async def ws_client(http_server, http_server_port):
 async def ws_auth_client(http_server, http_server_port, cookie):
     """ return a websocket client """
     request = HTTPRequest(
-        f'ws://localhost:{http_server_port[1]}/ws', headers={'Cookie': await cookie},
+        f'ws://localhost:{http_server_port[1]}/ws',
+        headers={'Cookie': await cookie},
     )
     result = await websocket_connect(request)
     return result

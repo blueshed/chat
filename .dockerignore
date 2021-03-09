@@ -3,6 +3,7 @@
 .benchmarks
 .pytest_cache
 .coverage
+.vscode
 /client
 /config/local.yml
 /docs
