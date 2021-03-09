@@ -19,7 +19,7 @@ async def test_ws(ws_client):
 
 
 async def test_ws_cors_failure(ws_bad_client):
-    """ test message send and receive """
+    """ test bad request """
 
     try:
         await ws_bad_client
@@ -29,7 +29,7 @@ async def test_ws_cors_failure(ws_bad_client):
 
 
 async def test_ws_cors_success(ws_bad_client, app):
-    """ test message send and receive """
+    """ test cors message send and receive """
 
     message = 'hello, world'
     app.settings['debug'] = True

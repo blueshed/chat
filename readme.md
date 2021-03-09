@@ -1,4 +1,4 @@
-# Realtime Chat Engineered
+# Realtime Chat Engineered - the prequel
 
 <p align="center">
   <img alt="chat package" src="images/two-windows.png" width="1001">
@@ -6,12 +6,12 @@
 
 This article is a follow on from [Realtime Chat with Vite, Vue3 and Python
 Tornado](https://pspddo.medium.com/realtime-chat-with-vite-vue3-and-python-tornado-31c8085253af).
-In that article I suggested that I could provide a view of
-pylint, axblack, pytest and sphinx. I use [Atom](https://atom.io/), but others
-are excellent too, such as VS Code, Eclipse and PyCharm. Atom has plug-ins to
-make it a usable python ide: language-python, python-black, linter-pylint,
-platformio-ide-terminal, to name but a few. What we'll do her is in the terminal, so any 
-editor will do.
+But my son said this should have come first. In that article I suggested that 
+I could provide a view of pylint, axblack, pytest and sphinx. 
+I use [Atom](https://atom.io/), but others are excellent too, such as VS Code, 
+Eclipse and PyCharm. Atom has plug-ins to make it a usable python ide: language-python, 
+python-black, linter-pylint, platformio-ide-terminal, to name but a few. What we'll 
+do her is in the terminal, so any editor will do.
 
 By engineering I mean tested, consistent, documented code. So let's start
 setting up some command line tools to make this less daunting.
@@ -25,7 +25,7 @@ another article when I address my appalling gui.
 
 The tools:
 
-- invoke - how to make a command line tools
+- invoke - how to make command line tools
 - axblack - double quote comments and single quote code
 - pylint - express your divergence from the expected
 - pytest - make it work, make sure its all working, and performant
@@ -239,7 +239,7 @@ def lint(ctx):
 
 And to run it: `inv lint`. You should find unchanged files and 10.00/10!
 If not - fix it! Fixing it means either live with the badness and add to the
-`setup.cfg` and conform. Conforming is a contortion but following through
+`setup.cfg` or conform. Conforming is a contortion but following through
 I've found interesting changes to my code style, if nothing else.
 
 ## pytest
@@ -251,7 +251,7 @@ and we have helpers for tornado and async code.
 First create a `tests` package and add a module: `tests/conftests.py`. This
 file will contain our `fixtures` - pytest's useful reusables for setting up tests.
 
-## conftests.py
+## tests/conftests.py
 ```python
 """ our test fixtures """
 import pytest
@@ -332,7 +332,7 @@ async def ws_bad_client(http_server, http_server_port):
 Then add the following two tests to `test_ws.py`:
 ```python
 async def test_ws_cors_failure(ws_bad_client):
-    """ test message send and receive """
+    # """ test bad request """
 
     try:
         await ws_bad_client
@@ -342,7 +342,7 @@ async def test_ws_cors_failure(ws_bad_client):
 
 
 async def test_ws_cors_success(ws_bad_client, app):
-    """ test message send and receive """
+    """ test cors message send and receive """
 
     message = 'hello, world'
     app.settings['debug'] = True
