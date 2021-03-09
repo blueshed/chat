@@ -10,10 +10,11 @@ In that article I suggested that I could provide a view of
 pylint, axblack, pytest and sphinx. I use [Atom](https://atom.io/), but others
 are excellent too, such as VS Code, Eclipse and PyCharm. Atom has plug-ins to
 make it a usable python ide: language-python, python-black, linter-pylint,
-platformio-ide-terminal, to name but a few.
+platformio-ide-terminal, to name but a few. What we'll do her is in the terminal, so any 
+editor will do.
 
 By engineering I mean tested, consistent, documented code. So let's start
-setting up some tools to make this less daunting.
+setting up some command line tools to make this less daunting.
 
 In this artcile I'll be concentrating on python and cover javascript in
 another article when I address my appalling gui.
@@ -62,8 +63,7 @@ nodeenv
 
 NB. you should be putting version numbers beside these requirement packages.
 At the time of writing I was actually using tornado==6.1 - `pip freeze` will
-tell you what you've actually got. During development I leave them off so as
-to test for conflicts on the latest versions; if I find any, I lock down.
+tell you what you've actually got. We'll lock down them down later.
 
 ## Makefile
 ```bash
@@ -175,6 +175,7 @@ def docker(ctx):
     """ build & run our docker server """
     ctx.run('docker-compose build')
     ctx.run('docker-compose up')
+    ctx.run('docker-compose down')
 ```
 
 Activate your `venv` and you run `invoke -l` or the short-cut `inv -l`.
@@ -224,7 +225,7 @@ use pylint and axblack.
 black is a wonderful tool. Type away and it will clean up after you. Sadly,
 black itself goes for double quotes only. We live in a json world and snippets
 live in single quotes. So [axblack](https://pypi.org/project/axblack/) gives
-you the opinionation of black, but expects double quotes for comments and
+you the opinionation of black, but uses double quotes for comments and
 single quotes for code.
 
 We just add a task to `tasks.py`:
@@ -252,7 +253,7 @@ file will contain our `fixtures` - pytest's useful reusables for setting up test
 
 ## conftests.py
 ```python
-""" our test fictures """
+""" our test fixtures """
 import pytest
 from tornado.httpclient import HTTPRequest
 from tornado.websocket import websocket_connect
@@ -328,7 +329,7 @@ async def ws_bad_client(http_server, http_server_port):
     return result
 ```
 
-The add the following two tests to `test_ws.py`:
+Then add the following two tests to `test_ws.py`:
 ```python
 async def test_ws_cors_failure(ws_bad_client):
     """ test message send and receive """
@@ -375,7 +376,7 @@ in the `dev.txt` with some extension. To begin our sphinx project we'll call:
 % sphinx quickstart
 ```
 and answer all the questions (NB. defaults are good). First we have to
-add our extension to `docsrc/conf.py`:
+add our extensions to `docsrc/conf.py`:
 ```
 extensions = [
     'sphinx.ext.autodoc',
