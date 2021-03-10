@@ -71,7 +71,7 @@ class LoginHandler(UserMixin, RequestHandler):
 
 class LogoutHandler(UserMixin, RequestHandler):
     """
-    Removes the cookie from application settings
+    removes the cookie defined in application settings
     and redirects.
     """
 

@@ -32,12 +32,23 @@
           <div class="body" role="main">
             
   <h1>Source code for chat.main</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; our entry point &quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Our entry point.</span>
+
+<span class="sd">    Call: `python -m chat.main` with the following options:</span>
+<span class="sd">    ::</span>
+<span class="sd">            --cfg     config path (default config/dev.yml)</span>
+<span class="sd">            --debug   auto reload (default False)</span>
+<span class="sd">            --port    port to listen on (default 8080)</span>
+<span class="sd">            --help    show this help information</span>
+
+<span class="sd">    There are more logging options, see --help.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">tornado.ioloop</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
-<span class="kn">from</span> <span class="nn">tornado.web</span> <span class="kn">import</span> <span class="n">Application</span>
+<span class="kn">from</span> <span class="nn">tornado.web</span> <span class="kn">import</span> <span class="n">Application</span><span class="p">,</span> <span class="n">StaticFileHandler</span>
 <span class="kn">from</span> <span class="nn">tornado.options</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">parse_command_line</span>
 <span class="kn">from</span> <span class="nn">.login</span> <span class="kn">import</span> <span class="n">LoginHandler</span><span class="p">,</span> <span class="n">LogoutHandler</span>
 <span class="kn">from</span> <span class="nn">.websocket</span> <span class="kn">import</span> <span class="n">Websocket</span>
@@ -51,13 +62,18 @@
 
 
 <div class="viewcode-block" id="make_app"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.make_app">[docs]</a><span class="k">def</span> <span class="nf">make_app</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; make an application &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; make a tornado application &quot;&quot;&quot;</span>
     <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="o">**</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;sa&#39;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">Application</span><span class="p">(</span>
         <span class="p">[</span>
             <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/ws&#39;</span><span class="p">,</span> <span class="n">Websocket</span><span class="p">),</span>
             <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="n">LoginHandler</span><span class="p">),</span>
             <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="n">LogoutHandler</span><span class="p">),</span>
+            <span class="p">(</span>
+                <span class="sa">r</span><span class="s1">&#39;/docs/(.*)&#39;</span><span class="p">,</span>
+                <span class="n">StaticFileHandler</span><span class="p">,</span>
+                <span class="p">{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="s1">&#39;docs&#39;</span><span class="p">,</span> <span class="s1">&#39;default_filename&#39;</span><span class="p">:</span> <span class="s1">&#39;index.html&#39;</span><span class="p">},</span>
+            <span class="p">),</span>
             <span class="p">(</span>
                 <span class="sa">r</span><span class="s1">&#39;/(.*)&#39;</span><span class="p">,</span>
                 <span class="n">AuthStaticFileHandler</span><span class="p">,</span>
@@ -75,7 +91,7 @@
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../autoapi/chat/main/index.html#chat.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>  <span class="c1"># pragma nocover</span>
-    <span class="sd">&quot;&quot;&quot; parse command line, make and start &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; parse command line, make and start ioloop &quot;&quot;&quot;</span>
     <span class="n">parse_command_line</span><span class="p">()</span>
 
     <span class="c1"># load settings</span>
@@ -134,6 +150,8 @@
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../chat.html">chat</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
 </ul>

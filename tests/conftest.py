@@ -6,7 +6,7 @@ import os
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from tornado.httpclient import HTTPRequest
 from tornado.websocket import websocket_connect
 from chat.main import make_app
@@ -17,9 +17,7 @@ def init_db(settings):
     db_url = settings['sa']['url']
     alembic_config = Config()
     alembic_config.set_main_option('sqlalchemy.url', db_url)
-    alembic_config.set_main_option(
-        'script_location', settings['sa_script_location']
-    )
+    alembic_config.set_main_option('script_location', settings['sa_script_location'])
     if db_url.startswith('sqlite:///'):
         # sqlite does not like downgrading, zap it
         os.unlink(db_url[len('sqlite:///') :])
@@ -28,10 +26,12 @@ def init_db(settings):
     command.upgrade(alembic_config, 'head')
 
     # load basic data
-    engine = create_engine(db_url)
-    engine.execute(
-        'insert into user (email, password) values ("dog1@test.com","dog1")'
-    )
+    engine = create_engine(db_url, future=True)
+    with engine.connect() as conn:
+        conn.execute(
+            text('insert into user (email, password) values ("dog1@test.com","dog1")')
+        )
+        conn.commit()
     return db_url
 
 
@@ -42,11 +42,7 @@ def load_settings():
     config.read('setup.cfg')
     section = config['testdb']
     return {
-        'sa': {
-            'url': section['sqlalchemy.url'],
-            'echo': False,
-            'future': True,
-        },
+        'sa': {'url': section['sqlalchemy.url'], 'echo': False, 'future': True,},
         'sa_script_location': section['script_location'],
         'tornado': {
             'cookie_name': 'test-chat-cookie',
@@ -102,8 +98,7 @@ async def ws_client(http_server, http_server_port):
 async def ws_auth_client(http_server, http_server_port, cookie):
     """ return a websocket client """
     request = HTTPRequest(
-        f'ws://localhost:{http_server_port[1]}/ws',
-        headers={'Cookie': await cookie},
+        f'ws://localhost:{http_server_port[1]}/ws', headers={'Cookie': await cookie},
     )
     result = await websocket_connect(request)
     return result

@@ -3,6 +3,11 @@
 
 .. py:module:: chat
 
+.. autoapi-nested-parse::
+
+   our chat server 
+
+
 
 Submodules
 ----------
@@ -16,4 +21,12 @@ Submodules
    tables/index.rst
    websocket/index.rst
 
+
+Package Contents
+----------------
+
+.. data:: VERSION
+   :annotation: = 0.0.1
+
+   
 

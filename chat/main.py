@@ -1,9 +1,21 @@
-""" our entry point """
+"""
+    Our entry point.
+
+    Call: `python -m chat.main` with the following options:
+    ::
+            --cfg     config path (default config/dev.yml)
+            --debug   auto reload (default False)
+            --port    port to listen on (default 8080)
+            --help    show this help information
+
+    There are more logging options, see --help.
+"""
 import logging
+import os
 import tornado.ioloop
 import yaml
 from sqlalchemy import create_engine
-from tornado.web import Application
+from tornado.web import Application, StaticFileHandler
 from tornado.options import define, options, parse_command_line
 from .login import LoginHandler, LogoutHandler
 from .websocket import Websocket
@@ -17,13 +29,18 @@ define('cfg', type=str, default='config/dev.yml', help='config path')
 
 
 def make_app(settings):
-    """ make an application """
+    """ make a tornado application """
     engine = create_engine(**settings['sa'])
     return Application(
         [
             (r'/ws', Websocket),
             (r'/login', LoginHandler),
             (r'/logout', LogoutHandler),
+            (
+                r'/docs/(.*)',
+                StaticFileHandler,
+                {'path': 'docs', 'default_filename': 'index.html'},
+            ),
             (
                 r'/(.*)',
                 AuthStaticFileHandler,
@@ -41,7 +58,7 @@ def make_app(settings):
 
 
 def main():  # pragma nocover
-    """ parse command line, make and start """
+    """ parse command line, make and start ioloop """
     parse_command_line()
 
     # load settings
@@ -51,8 +68,9 @@ def main():  # pragma nocover
 
     # make app
     app = make_app(settings)
-    app.listen(options.port)
-    log.info('listening on port: %s', options.port)
+    port = int(os.getenv('PORT', options.port))
+    app.listen(port)
+    log.info('listening on port: %s', port)
     if options.debug:
         log.warning('running in debug mode')
 

@@ -37,8 +37,9 @@ export default {
     },
     methods: {
         async fetch_weather() {
+            let protocol = document.location.protocol;
             let location = this.weather_location ? this.weather_location : "milford haven"
-            let url = `http://wttr.in/${location}?format=3`
+            let url = `${protocol}//wttr.in/${location}?format=3`
             fetch(url)
                 .then(async (response) => {
                     this.weather = await response.text()

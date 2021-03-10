@@ -5,7 +5,16 @@
 
 .. autoapi-nested-parse::
 
-   our entry point 
+   Our entry point.
+
+   Call: `python -m chat.main` with the following options:
+   ::
+           --cfg     config path (default config/dev.yml)
+           --debug   auto reload (default False)
+           --port    port to listen on (default 8080)
+           --help    show this help information
+
+   There are more logging options, see --help.
 
 
 
@@ -29,11 +38,11 @@ Functions
 
 .. function:: make_app(settings)
 
-   make an application 
+   make a tornado application 
 
 
 .. function:: main()
 
-   parse command line, make and start 
+   parse command line, make and start ioloop 
 
 

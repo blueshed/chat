@@ -1,17 +1,17 @@
 # Realtime Chat Persisted
 
 <p align="center">
-  <img alt="chat package" src="images/two-windows.png" width="1001">
+  <img alt="chat package" src="images/two-windows-2.jpg" width="800">
 </p>
 
 This article is the third in the series [Realtime Chat with Vite, Vue3 and Python
 Tornado](https://pspddo.medium.com/realtime-chat-with-vite-vue3-and-python-tornado-31c8085253af).
-In this article we'd add SQLAlchemy persistence and authentication to our chat app.
+In this article we'll add SQLAlchemy persistence and authentication to our chat app.
 
 So tooling up, we need to add [alembic](https://alembic.sqlalchemy.org/en/latest/)
 to our `dev.txt` and [sqlalchemy](https://docs.sqlalchemy.org/en/14/) to our
 `requirements.txt`. (NB. At the time of writing SQLAlchemy 1.4.0b3 was in beta
-and so the actual entry in `requirements.txt` was `--pre sqlalchemy`).
+and so the actual entry in `requirements.txt` was `sqlalchemy==1.4.0b3`).
 
 Having done that, we can call `make setup` to install the new packages.
 
@@ -19,7 +19,7 @@ Having done that, we can call `make setup` to install the new packages.
 
 This package supports two flavours of persistence: an object relational mapper
 and an expression language. We'll use the expression language. Create a
-modules `chat/tables.py` and its contents:
+module `chat/tables.py` and its contents:
 ```
 """ our sqlalchemy schema """
 from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
@@ -38,13 +38,15 @@ user = Table(
 )
 ```
 
+How we use this table you'll see further down as we test it before we
+use it - test first - after configuration and fixtures - yes, test first.
 
 ## Alembic
 
 This package manages the migration of our database in response to changes in
 our code. It is a tool used in setup and testing. It plays no part in runtime.
 Not all databases support all of its features, but we'll avoid the obvious one,
-such as removing a column from a table in sqlite. Alemic is a command line
+such as removing a column from a table in sqlite. Alembic is a command line
 tool and as such I'll need some additions to `tasks.py` to remember all the
 syntax.
 
@@ -70,10 +72,10 @@ def db_downgrade(ctx, name='chatdb', revision='base'):
 ```
 
 These are the operations I perform and yet the tools is capable of so much
-more. Please check out the documentation.
+more. Please check out the [documentation](https://alembic.sqlalchemy.org/en/latest/).
 
 To begin we'll call `alembic init chat/scripts`. This will create a `scripts`
-directory inside you `chat` package. Since it has no `__init__.py`, python will
+directory inside your `chat` package. Since it has no `__init__.py`, python will
 not pick it up at runtime. Since projects can have many packages and this one
 has a persistence layer, I see no reason to separate them. Alembic requires
 two configuration parameters: the location of the scripts directory and the
@@ -95,7 +97,7 @@ import chat.tables
 target_metadata = chat.tables.metadata
 ```
 
-NB. Since our config provides no logging information you will need to comment
+NB. Since our config provides no logging information, you will need to comment
 out line 14 - `#fileConfig(config.config_file_name)`. If we need to set
 up logger we can do it later.
 
@@ -119,15 +121,19 @@ def init_db(name='testdb'):
     config = configparser.ConfigParser()
     config.read('setup.cfg')
     section = config[name]
+    db_url = section['sqlalchemy.url']
     alembic_config = Config()
-    alembic_config.set_main_option('sqlalchemy.url', section['sqlalchemy.url'])
+    alembic_config.set_main_option('sqlalchemy.url', db_url)
     alembic_config.set_main_option(
         'script_location', section['script_location']
     )
-    command.downgrade(alembic_config, 'base')
+    if db_url.startswith('sqlite:///'):
+        # sqlite does not like downgrading, zap it
+        os.unlink(db_url[len('sqlite:///') :])
+    else:
+        command.downgrade(alembic_config, 'base')
     command.upgrade(alembic_config, 'head')
-    return section['sqlalchemy.url']
-
+    return db_url
 
 @pytest.fixture(scope='session')
 def test_db():
@@ -198,8 +204,9 @@ def test_delete(test_db):
 ```
 
 Running our tests now, `inv test`, should produce and output:
+
 ```bash
----------- coverage: platform darwin, python 3.8.7-final-0 -----------
+---------- coverage -----------
 Name                Stmts   Miss  Cover   Missing
 -------------------------------------------------
 chat/__init__.py        0      0   100%
@@ -251,11 +258,7 @@ tornado:
     login_url: /login
 ```
 
-We'll adapt `chat/main.py`
-
-
-We'll look at configuration later, but for now just add these
-to `chat/main.py`:
+We'll adapt `chat/main.py`:
 
 ```python
 define('cfg', type=str, default='config/local.yml', help='config path')
@@ -302,14 +305,25 @@ is also used in our `tests/conftest.py` - let's update that too:
 ```python
 def init_db(settings):
     """ downgrade and upgrade db """
+    db_url = settings['sa']['url']
     alembic_config = Config()
-    alembic_config.set_main_option('sqlalchemy.url', settings['sa']['url'])
-    alembic_config.set_main_option(
-        'script_location', settings['sa_script_location']
-    )
-    command.downgrade(alembic_config, 'base')
+    alembic_config.set_main_option('sqlalchemy.url', db_url)
+    alembic_config.set_main_option('script_location', settings['sa_script_location'])
+    if db_url.startswith('sqlite:///'):
+        # sqlite does not like downgrading, zap it
+        os.unlink(db_url[len('sqlite:///') :])
+    else:
+        command.downgrade(alembic_config, 'base')
     command.upgrade(alembic_config, 'head')
-    return settings['sa']['url']
+
+    # load basic data
+    engine = create_engine(db_url, future=True)
+    with engine.connect() as conn:
+        conn.execute(
+            text('insert into user (email, password) values ("dog1@test.com","dog1")')
+        )
+        conn.commit()
+    return db_url
 
 
 @pytest.fixture(name='settings', scope='session')
@@ -319,11 +333,7 @@ def load_settings():
     config.read('setup.cfg')
     section = config['testdb']
     return {
-        'sa': {
-            'url': section['sqlalchemy.url'],
-            'echo': False,
-            'future': True,
-        },
+        'sa': {'url': section['sqlalchemy.url'], 'echo': False, 'future': True,},
         'sa_script_location': section['script_location'],
         'tornado': {
             'cookie_name': 'test-chat-cookie',
@@ -353,7 +363,7 @@ down at the bottom of the screen. As a parameter it is called `settings` and
 pytest is clever enough to make this possible. Our app is using settings and
 our test_db is using settings and settings is using `setup.cfg`. Our settings
 have a non-production addition of the alembic script location - and our production
-namespace is safe - no alembic.
+namespace is safe - no alembic. We've also created a user so we can test cookies!
 
 So having done configuration we can write a login handler!
 
@@ -408,20 +418,13 @@ class LoginHandler(UserMixin, RequestHandler):
             if submit == 'login':
                 user = await self.login(email, password)
             if user:
-                self.set_current_user(user)
+                self.set_secure_cookie(self.cookie_name, json.dumps(user))
                 self.redirect(self.get_argument('next', '/'))
             else:
                 raise Exception('email or password incorrect')
         except Exception as ex:  # pylint: disable=W0703
             log.exception(ex)
             self.get(error=str(ex))
-
-    def set_current_user(self, value):
-        """ put the current user in the cookie """
-        if value:
-            self.set_secure_cookie(self.cookie_name, json.dumps(value))
-        else:
-            self.clear_cookie(self.cookie_name)
 
     def login(self, email, password):
         """ can we login ? """
@@ -437,19 +440,405 @@ class LoginHandler(UserMixin, RequestHandler):
         return user
 ```
 
-Now we need to users to test. We'll call `inv db-revise -m 'test data'` and
-edit the generated file:
+Now we need to update our websocket with the `UserMixin` and reject unauthenticated requests.
+
 ```python
-def upgrade():
-    """ setup test users """
-    op.execute(
-        "INSERT INTO user (email, password) VALUES ('dog1@test.com', 'dog1')"
-    )
-    op.execute(
-        "INSERT INTO user (email, password) VALUES ('dog2@test.com', 'dog2')"
-    )
+class Websocket(UserMixin, WebSocketHandler):
+    """ a websocket handler that broadcasts to all clients """
+
+    ...
+
+    def open(self, *args, **kwargs):
+        """ we connected """
+        if self.current_user is None:
+            self.close(401, 'not authenticated')
+            return
+        email = self.current_user['email']
+        log.info('WebSocket opened: %s', email)
+        self.write_message(email)
+        self.clients.append(self)
+
+    ...
+
+    def on_message(self, message):
+        """ we've said something, tell everyone """
+        email = self.current_user['email']
+        message = json.dumps({'user': email, 'message': message})
+        for client in self.clients:
+            client.write_message(message)
 ```
 
+On open we send back the user's email - this allows us to get rid of the input for user in our vue component. We also create a json message when someone says something.
 
-The source is on [https://github.com/blueshed/chat/tree/persistence
-](https://github.com/blueshed/chat/tree/persistence)
+And now we need to specialize the StaticFileHandler:
+
+```python
+class AuthStaticFileHandler(UserMixin, StaticFileHandler):
+    """
+    This provide integration between tornado.web.authenticated
+    and tornado.web.StaticFileHandler.
+    """
+
+    def initialize(self, allow=None, **kwargs):  # pylint: disable=W0221
+        """ allow some paths through """
+        super().initialize(**kwargs)
+        self.allow = allow if allow else []  # pylint: disable=W0201
+
+    async def get(self, path, include_body=True):
+        """ safe to return what you need """
+        if self.current_user is None and path not in self.allow:
+            return self.not_authenticated()
+        return await StaticFileHandler.get(self, path, include_body)
+
+    def not_authenticated(self):
+        """ raise a redirect or error, tornado code dug out of a wrapper """
+        url = self.get_login_url()
+        if '?' not in url:
+            if urllib.parse.urlsplit(url).scheme:
+                # if login url is absolute, make next absolute too
+                next_url = self.request.full_url()
+            else:
+                assert self.request.uri is not None
+                next_url = self.request.uri
+            url += '?' + urlencode(dict(next=next_url))
+        self.redirect(url)
+```
+
+We pass in a list of allowable paths because `favicon.ico` is called even for the login page, and we might want a `robots.txt`, etc. So back in `main.py` we need a new route definition.
+
+```python
+(
+    r'/(.*)',
+    AuthStaticFileHandler,
+    {
+        'path': 'chat/static',
+        'default_filename': 'index.html',
+        'allow': ['favicon.ico'],
+    },
+)
+```
+
+So now we can serve static file, respond to authenticated websocket requests,
+login and oh! We need a `login.html` and Vue will not provide that! If you
+scan back you'll notice that the LoginHandler.get function renders a 'login.html'.
+Tornado will render a template and if you don't specify a template path it will
+look beside the handler module for the template document. Our's looks like this:
+
+## login.html
+```html
+<form action="/login" method="post">
+    <h1>Chat Login</h1>
+    <div class="column">
+        <input type="email" name="email" value="{{ email or '' }}" placeholder="email" autofocus>
+        <div class="sep"></div>
+        <input type="password" name="password" value="" placeholder="password">
+        <div class="sep"></div>
+        <input type="submit" name="submit" value="login">
+        <div class="sep"></div>
+        <input type="hidden" name="next" value="{{ next }}">
+    </div>
+    {%if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+    {% end %}
+</form>
+```
+
+This is using the built-in template language. Double curly braces get python time.
+It is a simple language and you can make really complicated sites with it - I know,
+my customers have said so. But it does the job.
+
+## Refactoring Vue Client
+
+We need to refactor our vue client starting with our `websocket.js`.
+
+```javascript
+const ws = new WebSocket(ws_url);
+ws.state = reactive({
+    status: "connecting",
+    email: "",
+    transcript: []
+})
+ws.onopen = function () {
+    ws.state.status = "connected"
+}
+ws.onmessage = function (evt) {
+    if (ws.state.email == "") {
+        ws.state.email = evt.data
+    } else {
+        ws.state.transcript.push(JSON.parse(evt.data))
+    }
+};
+ws.onclose = function () {
+    ws.state.status = "disconnected"
+}
+```
+
+We now have a reactive state object with: status, email and transcript. So now
+our vue component can be refactored as `Chat.vue`:
+
+```html
+<Weather class="weather" />
+<div class="transcript" ref="transcript">
+    <div class="line" v-for="(line, idx) in transcript" :key="idx">
+        <template v-if="line.user == email">
+            <UserImage :email="line.user" class="circle" v-if="line.user == email" />
+            <div class="message">{{ line.message }}</div>
+            <div class="spacer"></div>
+        </template>
+        <template v-else>
+            <div class="spacer"></div>
+            <div class="message">{{ line.message }}</div>
+            <UserImage :email="line.user" class="circle" v-if="line.user != email" />
+        </template>
+    </div>
+</div>
+<form @submit.prevent="say">
+    <UserImage :email="email" class="circle" v-if="email" />
+    <input type="text" v-model="something" placeholder="say something" />
+    <input type="submit" value="Say" />
+</form>
+<div class="status">
+    {{ status }}
+</div>
+```
+
+Because our transcript is now an array of objects we can use the information
+to put messages from me to the left and messages from others to the right. What
+is a UserImage - it's just a component to display `gravatar` of the email
+address. I've also added a `weather.vue` - it's an input where the placeholder
+is the `wttr.in` information for a location. The default location is 'Haverford West',
+but input a value and hit enter - the placeholder will be changed to the
+weather there. I hear you thinking - that could be a preference! You are way
+ahead of me.
+
+Our `script` has been refactored too:
+
+```javascript
+import UserImage from './user_image.vue'
+import Weather from './weather.vue'
+export default {
+    components: {
+        UserImage,
+        Weather
+    },
+    data() {
+        return {
+            something: ""
+        }
+    },
+    computed: {
+        email() {
+            return this.$ws.state.email
+        },
+        transcript() {
+            return this.$ws.state.transcript
+        },
+        status() {
+            return this.$ws.state.status
+        }
+    },
+    methods: {
+        say() {
+            this.$ws.send(this.something)
+            this.something = ""
+        }
+    },
+    watch: {
+        transcript: {
+            handler(val) {
+                setTimeout(() => {
+                    this.$refs.transcript.scrollTop = this.$refs.transcript.scrollHeight
+                }, 100)
+            },
+            deep: true
+        }
+    }
+}
+```
+
+So what do our tests look like?
+
+## tests/test_ws.py
+
+```python
+""" test websocket client """
+import asyncio
+import json
+from tornado.httpclient import HTTPClientError
+
+
+async def test_no_auth_ws(ws_client):
+    """ test we need to authenticate """
+
+    client = await ws_client
+    response = await client.read_message()
+    assert response is None, 'nothing to read - is closed'
+
+
+async def test_ws(ws_auth_client):
+    """ test message send and receive """
+
+    message = 'hello, world'
+
+    client = await ws_auth_client
+    response = await client.read_message()
+    assert response == 'dog1@test.com'
+    await client.write_message(message)
+    response = await client.read_message()
+    print(response)
+    assert response == json.dumps({'user': 'dog1@test.com', 'message': message})
+
+    client.close()
+    await asyncio.sleep(0.01)
+
+
+async def test_ws_cors_failure(ws_bad_client):
+    """ test message send and receive """
+
+    try:
+        await ws_bad_client
+        assert False, 'should have returned 403'
+    except HTTPClientError as ex:
+        assert ex.code == 403
+
+
+async def test_ws_cors_success(ws_bad_client, app):
+    """ test message send and receive """
+
+    message = 'hello, world'
+    app.settings['debug'] = True
+    client = await ws_bad_client
+    response = await client.read_message()
+    assert response == 'dog1@test.com'
+    await client.write_message(message)
+    response = await client.read_message()
+    print(response)
+    assert response == json.dumps({'user': 'dog1@test.com', 'message': message})
+
+    client.close()
+    await asyncio.sleep(0.01)
+```
+
+We have a new fixture: `ws_auth_client`.
+
+```python
+@pytest.fixture(name='cookie')
+async def get_cookie(settings, http_server, http_server_client):
+    """ login to get a cookie """
+    response = await http_server_client.fetch(
+        settings['tornado']['login_url'],
+        headers={
+            'Content-type': 'application/x-www-form-urlencoded',
+            'Accept': 'text/plain',
+        },
+        method='POST',
+        body=urllib.parse.urlencode(
+            {'email': 'dog1@test.com', 'password': 'dog1', 'submit': 'login'}
+        ),
+        follow_redirects=False,
+        raise_error=False,
+    )
+    print(response)
+    return response.headers['Set-Cookie']
+
+@pytest.fixture
+async def ws_auth_client(http_server, http_server_port, cookie):
+    """ return a websocket client """
+    request = HTTPRequest(
+        f'ws://localhost:{http_server_port[1]}/ws', headers={'Cookie': await cookie},
+    )
+    result = await websocket_connect(request)
+    return result
+```
+
+This allows us to authenticate via cookie with the credentials we created
+after upgrading the test database.
+
+And testing our static file handler:
+
+```python
+""" test our static file handler """
+
+
+async def test_favicon(http_server_client):
+    """ can we get favicon without login """
+    resp = await http_server_client.fetch('/favicon.ico')
+    assert resp.code == 200
+
+
+async def test_index_page(http_server_client, http_server_port, app):
+    """ can we get favicon without login """
+    resp = await http_server_client.fetch(
+        '/', follow_redirects=False, raise_error=False
+    )
+    assert resp.code == 302
+
+    app.settings['login_url'] = f'http://localhost:{http_server_port}/login'
+
+    resp = await http_server_client.fetch(
+        '/index.html', follow_redirects=False, raise_error=False
+    )
+    assert resp.code == 302
+
+    app.settings['login_url'] = '/login'
+```
+
+Testing results in:
+
+```bash
+---------- coverage: platform darwin, python 3.8.7-final-0 -----------
+Name                     Stmts   Miss  Cover   Missing
+------------------------------------------------------
+chat/__init__.py             1      0   100%
+chat/login.py               50      0   100%
+chat/main.py                18      0   100%
+chat/static_handler.py      21      0   100%
+chat/tables.py               3      0   100%
+chat/websocket.py           28      0   100%
+------------------------------------------------------
+TOTAL                      121      0   100%
+=========================== 12 passed in 0.78s =======================
+```
+
+But, does it work? The image at the top of the screen is proof it works
+on my machine from docker. **NB.** *I could not get alpine to work with `greenlets`,
+for less than the cost of `buster` - the Dockerfile uses:
+`FROM python:3-slim-buster as base` and builds as 137MB*
+
+If you have got this far, checkout the code as
+it's got some added documentation and I've left inline comments for
+gotchas. It's been a long haul - but there are some things to mention.
+
+How do you register users? I've got a task for that:
+
+```python
+@task
+def register(_, email, password, name='chatdb'):
+    """ load settings, create engine and insert user """
+    import configparser
+    from sqlalchemy import create_engine, insert
+    from chat import tables
+
+    config = configparser.ConfigParser()
+    config.read('setup.cfg')
+    engine = create_engine(config[name]['sqlalchemy.url'], future=True)
+    with engine.connect() as conn:
+        conn.execute(
+            insert(tables.user).values(email=email, password=password)
+        )
+        conn.commit()
+```
+
+Or you could allow users to register? Or we could implement OAuth2 and
+users could register via our provider.
+
+Tornado is an asynchronous server and we're using synchronous access to a
+sqlite db. This is not wrong, it just not scalable. Our database is locked
+away in our container and oops - it gone! So how do we scale? That's another
+article - the fourth in the series!
+
+
+The source is on [https://github.com/blueshed/chat/tree/article3
+](https://github.com/blueshed/chat/tree/article3)

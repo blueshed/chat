@@ -35,7 +35,15 @@
             
   <div class="section" id="module-chat.main">
 <span id="chat-main"></span><h1><a class="reference internal" href="#module-chat.main" title="chat.main"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.main</span></code></a><a class="headerlink" href="#module-chat.main" title="Permalink to this headline">¶</a></h1>
-<p>our entry point</p>
+<p>Our entry point.</p>
+<p>Call: <cite>python -m chat.main</cite> with the following options:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">cfg</span>     <span class="n">config</span> <span class="n">path</span> <span class="p">(</span><span class="n">default</span> <span class="n">config</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">yml</span><span class="p">)</span>
+<span class="o">--</span><span class="n">debug</span>   <span class="n">auto</span> <span class="n">reload</span> <span class="p">(</span><span class="n">default</span> <span class="kc">False</span><span class="p">)</span>
+<span class="o">--</span><span class="n">port</span>    <span class="n">port</span> <span class="n">to</span> <span class="n">listen</span> <span class="n">on</span> <span class="p">(</span><span class="n">default</span> <span class="mi">8080</span><span class="p">)</span>
+<span class="o">--</span><span class="n">help</span>    <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">information</span>
+</pre></div>
+</div>
+<p>There are more logging options, see –help.</p>
 <div class="section" id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="functions">
@@ -47,10 +55,10 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#chat.main.make_app" title="chat.main.make_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_app</span></code></a>(settings)</p></td>
-<td><p>make an application</p></td>
+<td><p>make a tornado application</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#chat.main.main" title="chat.main.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
-<td><p>parse command line, make and start</p></td>
+<td><p>parse command line, make and start ioloop</p></td>
 </tr>
 </tbody>
 </table>
@@ -62,13 +70,13 @@
 <dl class="py function">
 <dt id="chat.main.make_app">
 <code class="sig-prename descclassname"><span class="pre">chat.main.</span></code><code class="sig-name descname"><span class="pre">make_app</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/main.html#make_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.main.make_app" title="Permalink to this definition">¶</a></dt>
-<dd><p>make an application</p>
+<dd><p>make a tornado application</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="chat.main.main">
 <code class="sig-prename descclassname"><span class="pre">chat.main.</span></code><code class="sig-name descname"><span class="pre">main</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/main.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.main.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>parse command line, make and start</p>
+<dd><p>parse command line, make and start ioloop</p>
 </dd></dl>
 
 </div>
@@ -101,6 +109,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">  chat</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#package-contents">Package Contents</a></li>
 </ul>
 </li>
 </ul>

@@ -6,7 +6,6 @@
 .vscode
 /client
 /config/local.yml
-/docs
 /docsrc
 /images
 /nenv

@@ -4,7 +4,7 @@
         <Weather class="weather" />
         <div class="transcript" ref="transcript">
             <div class="line" v-for="(line, idx) in transcript" :key="idx">
-                <template v-if="line.user == $ws.state.email">
+                <template v-if="line.user == email">
                     <UserImage :email="line.user" class="circle" v-if="line.user == email" />
                     <div class="message">{{ line.message }}</div>
                     <div class="spacer"></div>
