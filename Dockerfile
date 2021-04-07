@@ -1,5 +1,5 @@
 
-FROM python:3-slim-buster as base
+FROM python:3-slim as base
 
 FROM base as builder
 
@@ -9,6 +9,7 @@ WORKDIR /install
 
 COPY requirements.txt /requirements.txt
 
+RUN pip install -q -U pip setuptools wheel
 RUN pip install --prefix=/install -r /requirements.txt
 
 FROM base

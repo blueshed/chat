@@ -1,0 +1,17 @@
+---
+# our settings for sqlalchemy.create_engine
+sa:
+    url: mysql+aiomysql://root:secret@localhost/chat-test
+    echo: False
+    future: True
+sa_script_location: chat/scripts
+
+# our settings for tornado.we.Application
+tornado:
+    cookie_name: test-chat-cookie
+    cookie_secret: test hat wearing.
+    login_url: /login
+
+redis:
+    topic_name: test-chat-topic
+    redis_url: redis://localhost/1

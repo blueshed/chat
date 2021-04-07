@@ -1,69 +1,80 @@
 # pylint: disable=unused-argument
 """ our test fixtures """
-import configparser
+import logging
 import urllib.parse
-import os
 import pytest
+import redis
+import yaml
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text
+from sqlalchemy.ext.asyncio import create_async_engine
 from tornado.httpclient import HTTPRequest
 from tornado.websocket import websocket_connect
 from chat.main import make_app
+from chat.redis_websocket import RedisWebsocket
+
+log = logging.getLogger(__name__)
 
 
-def init_db(settings):
+def init_db(sa_url, script_location):
     """ downgrade and upgrade db """
-    db_url = settings['sa']['url']
+    url = sa_url.replace('mysql+aiomysql://', 'mysql+pymysql://')
     alembic_config = Config()
-    alembic_config.set_main_option('sqlalchemy.url', db_url)
-    alembic_config.set_main_option('script_location', settings['sa_script_location'])
-    if db_url.startswith('sqlite:///'):
-        # sqlite does not like downgrading, zap it
-        os.unlink(db_url[len('sqlite:///') :])
-    else:
-        command.downgrade(alembic_config, 'base')
+    alembic_config.set_main_option('sqlalchemy.url', url)
+    alembic_config.set_main_option('script_location', script_location)
+    command.downgrade(alembic_config, 'base')
     command.upgrade(alembic_config, 'head')
+    log.info('db: upgrade')
 
     # load basic data
-    engine = create_engine(db_url, future=True)
+    engine = create_engine(url, future=True)
     with engine.connect() as conn:
         conn.execute(
-            text('insert into user (email, password) values ("dog1@test.com","dog1")')
+            text(
+                'insert into user (email, password) values ("dog1@test.com","dog1")'
+            )
         )
         conn.commit()
-    return db_url
+    log.info('db: basic data')
+    return sa_url
+
+
+def init_redis(redis_url):
+    """ tidy up before we start """
+    conn = redis.from_url(redis_url)
+    conn.flushall()
+    conn.close()
+    log.info('redis: flushed')
 
 
 @pytest.fixture(name='settings', scope='session')
 def load_settings():
     """ return our settings """
-    config = configparser.ConfigParser()
-    config.read('setup.cfg')
-    section = config['testdb']
-    return {
-        'sa': {'url': section['sqlalchemy.url'], 'echo': False, 'future': True,},
-        'sa_script_location': section['script_location'],
-        'tornado': {
-            'cookie_name': 'test-chat-cookie',
-            'cookie_secret': 'test hat wearing',
-            'login_url': '/login',
-        },
-    }
+    with open('config/tests.yml') as file:
+        return yaml.safe_load(file)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def test_db(settings):
     """ returns sqlalchemy engine """
-    db_url = init_db(settings)
-    engine = create_engine(db_url, echo=True, future=True)
-    return engine
+    init_db(settings['sa']['url'], settings['sa_script_location'])
+    return create_async_engine(settings['sa']['url'], echo=True, future=True)
 
 
 @pytest.fixture
-def app(settings):
+def app(settings, io_loop):
     """ return a tornado application """
-    return make_app(settings)
+    appl = make_app(settings)
+    init_db(settings['sa']['url'], settings['sa_script_location'])
+    if settings.get('redis'):
+        init_redis(settings['redis']['redis_url'])
+        io_loop.add_callback(
+            RedisWebsocket.subscribe, appl, **settings['redis']
+        )
+    yield appl
+    io_loop.run_sync(appl.settings['engine'].dispose)
+    io_loop.run_sync(appl.settings['redis_pool'].close)
 
 
 @pytest.fixture(name='cookie')
@@ -98,7 +109,8 @@ async def ws_client(http_server, http_server_port):
 async def ws_auth_client(http_server, http_server_port, cookie):
     """ return a websocket client """
     request = HTTPRequest(
-        f'ws://localhost:{http_server_port[1]}/ws', headers={'Cookie': await cookie},
+        f'ws://localhost:{http_server_port[1]}/ws',
+        headers={'Cookie': await cookie},
     )
     result = await websocket_connect(request)
     return result

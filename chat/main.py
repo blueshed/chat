@@ -12,13 +12,14 @@
 """
 import logging
 import os
-import tornado.ioloop
 import yaml
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+from tornado.ioloop import IOLoop
 from tornado.web import Application, StaticFileHandler
 from tornado.options import define, options, parse_command_line
 from .login import LoginHandler, LogoutHandler
 from .websocket import Websocket
+from .redis_websocket import RedisWebsocket
 from .static_handler import AuthStaticFileHandler
 
 log = logging.getLogger(__name__)
@@ -30,12 +31,15 @@ define('cfg', type=str, default='config/dev.yml', help='config path')
 
 def make_app(settings):
     """ make a tornado application """
-    engine = create_engine(**settings['sa'])
+    if settings.get('redis'):
+        ws_route = (r'/ws', RedisWebsocket, settings['redis'])
+    else:
+        ws_route = (r'/ws', Websocket)
     return Application(
         [
-            (r'/ws', Websocket),
             (r'/login', LoginHandler),
             (r'/logout', LogoutHandler),
+            ws_route,
             (
                 r'/docs/(.*)',
                 StaticFileHandler,
@@ -52,7 +56,7 @@ def make_app(settings):
             ),
         ],
         debug=options.debug,
-        engine=engine,
+        engine=create_async_engine(**settings['sa']),
         **settings['tornado']
     )
 
@@ -75,11 +79,16 @@ def main():  # pragma nocover
         log.warning('running in debug mode')
 
     # start app
-    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop = IOLoop.current()
+    if settings.get('redis'):
+        ioloop.add_callback(RedisWebsocket.subscribe, app, **settings['redis'])
     try:
         ioloop.start()
     except (KeyboardInterrupt, SystemExit):
         # graceful shutdown
+        ioloop.run_sync(app.settings['engine'].dispose)
+        if settings.get('redis'):
+            ioloop.run_sync(app.settings['redis_pool'].close)
         ioloop.stop()
 
 

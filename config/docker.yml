@@ -1,7 +1,7 @@
 ---
 # our settings for sqlalchemy.create_engine
 sa:
-    url: mysql+aiomysql://root:secret@localhost:3306/chat
+    url: mysql+aiomysql://root:secret@db/chat
     echo: False
     future: True
 
@@ -13,4 +13,4 @@ tornado:
 
 redis:
     topic_name: chat-topic
-    redis_url: redis://localhost
+    redis_url: redis://redis

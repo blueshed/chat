@@ -1,8 +1,9 @@
 -r requirements.txt
 invoke
 pytest
-pytest-coverage
 pytest-benchmark
+pytest-coverage
+pytest_docker
 pytest-tornasync
 pylint
 axblack
@@ -14,3 +15,4 @@ wheel
 twine
 nodeenv
 alembic
+pymysql

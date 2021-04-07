@@ -1,5 +1,6 @@
 # pylint: disable=C0415
 """ our dev tasks """
+import time
 import webbrowser
 from invoke import task
 
@@ -32,7 +33,11 @@ def lint(ctx):
 @task
 def test(ctx):
     """ run our tests """
+    ctx.run('docker-compose -f tests/docker-compose.yml down')
+    ctx.run('docker-compose -f tests/docker-compose.yml up -d')
+    time.sleep(5)  # give docker time to come up
     ctx.run('pytest')
+    ctx.run('docker-compose -f tests/docker-compose.yml down')
 
 
 @task
@@ -106,3 +111,20 @@ def register(_, email, password, name='chatdb'):
             insert(tables.user).values(email=email, password=password)
         )
         conn.commit()
+
+
+@task
+def reset_redis(_, cfg='config/dev.yml'):
+    """ reset our redis """
+    import redis
+    import yaml
+
+    print('settings path: %s', cfg)
+    with open(cfg) as file:
+        settings = yaml.safe_load(file)
+
+    if settings.get('redis'):
+        redis_url = settings['redis']['redis_url']
+        conn = redis.from_url(redis_url)
+        conn.flushall()
+        print(f'flushed: {redis_url}')

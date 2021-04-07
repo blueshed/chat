@@ -59,13 +59,14 @@ class LoginHandler(UserMixin, RequestHandler):
         """ can we login ? """
         user = None
         engine = self.settings['engine']
-        with engine.connect() as conn:
+        async with engine.connect() as conn:
             stmt = select(tables.user).where(
                 tables.user.c.email == email, tables.user.c.password == password,
             )
-            row = conn.execute(stmt).first()
-            if row:
-                user = {'id': row.id, 'email': row.email}
+            result = await conn.execute(stmt)
+            result = result.first()
+            if result:
+                user = {'id': result.id, 'email': result.email}
         return user
 
 

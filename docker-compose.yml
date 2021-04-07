@@ -1,11 +1,26 @@
 version: '3'
 services:
-  web:
-    build: .
-    volumes:
-        - .:/app
-    image: chat:latest
-    container_name: chat
-    ports:
-      - "8080:80"
-    command: python -m chat.main --port=80 --debug=true
+    db:
+        image: mariadb
+        environment:
+            MYSQL_DATABASE: chat
+            MYSQL_ROOT_PASSWORD: secret
+        ports:
+            - "3306:3306"
+    redis:
+        container_name: redis
+        image: redis
+        ports:
+            - "6379:6379"
+    web:
+        build: .
+        volumes:
+            - .:/app
+        image: chat:latest
+        container_name: chat
+        ports:
+            - "8080:80"
+        command: python -m chat.main --port=80 --debug=true --cfg=config/docker.yml
+        depends_on:
+            - redis
+            - db

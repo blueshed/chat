@@ -1,15 +1,18 @@
 """ test our login and logout handler """
+import asyncio
 import urllib.parse
 
 
 async def test_login_get(http_server_client):
     """ can we get favicon without login """
+    await asyncio.sleep(0.001)
     resp = await http_server_client.fetch('/login')
     assert resp.code == 200
 
 
 async def test_logout(http_server_client, cookie):
     """ can we get favicon without login """
+    await asyncio.sleep(0.001)
     resp = await http_server_client.fetch(
         '/logout',
         headers={'Cookie': await cookie},
@@ -21,6 +24,7 @@ async def test_logout(http_server_client, cookie):
 
 async def fetch(client, body):
     """ helper """
+    await asyncio.sleep(0.001)
     return await client.fetch(
         '/login',
         headers={
@@ -36,7 +40,7 @@ async def fetch(client, body):
 
 async def test_login_errors(http_server_client):
     """ what if we pass in a wrong password or no email """
-
+    await asyncio.sleep(0.001)
     response = await fetch(
         http_server_client,
         {'email': 'dog1@test.com', 'password': 'dog2', 'submit': 'login'},

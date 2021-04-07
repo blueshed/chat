@@ -1,3 +1,4 @@
+# pylint: disable=W0201, W0221, W0236
 """ our websocket handler """
 import json
 import logging
@@ -34,9 +35,13 @@ class Websocket(UserMixin, WebSocketHandler):
             self.clients.remove(self)
         log.info('WebSocket closed')
 
-    def on_message(self, message):
+    async def on_message(self, message):
         """ we've said something, tell everyone """
         email = self.current_user['email']
         message = json.dumps({'user': email, 'message': message})
+        await self.broadcast(message)
+
+    async def broadcast(self, message):
+        """ send a message to all clients """
         for client in self.clients:
             client.write_message(message)
