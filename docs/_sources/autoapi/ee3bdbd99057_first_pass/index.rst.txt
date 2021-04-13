@@ -1,0 +1,54 @@
+:mod:`ee3bdbd99057_first_pass`
+==============================
+
+.. py:module:: ee3bdbd99057_first_pass
+
+.. autoapi-nested-parse::
+
+   first pass
+
+   Revision ID: ee3bdbd99057
+   Revises: 
+   Create Date: 2021-03-05 15:21:21.590312
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   ee3bdbd99057_first_pass.upgrade
+   ee3bdbd99057_first_pass.downgrade
+
+
+.. data:: revision
+   :annotation: = ee3bdbd99057
+
+   
+
+.. data:: down_revision
+   
+
+   
+
+.. data:: branch_labels
+   
+
+   
+
+.. data:: depends_on
+   
+
+   
+
+.. function:: upgrade()
+
+
+.. function:: downgrade()
+
+

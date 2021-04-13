@@ -1,0 +1,85 @@
+:mod:`chat.login`
+=================
+
+.. py:module:: chat.login
+
+.. autoapi-nested-parse::
+
+   our login handler 
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   chat.login.UserMixin
+   chat.login.LoginHandler
+   chat.login.LogoutHandler
+
+
+
+.. data:: log
+   
+
+   
+
+.. class:: UserMixin
+
+   for use by authenticated handlers 
+
+   .. method:: cookie_name(self)
+      :property:
+
+      return the cookie_name declared in application settings
+
+
+   .. method:: get_current_user(self)
+
+      return the current user from the cookie 
+
+
+
+.. class:: LoginHandler(application: tornado.web.Application, request: tornado.httputil.HTTPServerRequest, **kwargs: Any)
+
+
+   Bases: :class:`chat.login.UserMixin`, :class:`tornado.web.RequestHandler`
+
+   handle login get and post 
+
+   .. method:: get(self, error=None)
+
+      render the form 
+
+
+   .. method:: post(self)
+      :async:
+
+      handle login post 
+
+
+   .. method:: login(self, email, password)
+      :async:
+
+      can we login ? 
+
+
+
+.. class:: LogoutHandler(application: tornado.web.Application, request: tornado.httputil.HTTPServerRequest, **kwargs: Any)
+
+
+   Bases: :class:`chat.login.UserMixin`, :class:`tornado.web.RequestHandler`
+
+   removes the cookie from application settings
+   and redirects.
+
+   .. method:: get(self)
+
+      removes cookie and redirects to optional next argument 
+
+
+

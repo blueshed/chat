@@ -1,6 +1,6 @@
 """ our dev tasks """
-from invoke import task
 import webbrowser
+from invoke import task
 
 
 @task(help={'debug': 'run in hot-reload mode'})
@@ -38,7 +38,7 @@ def test(ctx):
 def docs_build(ctx):
     """ build docs """
     ctx.run('cd docsrc && make github')
-    ctx.run('touch ./docs/.nojekll')
+    ctx.run('touch ./docs/.nojekyll')
 
 
 @task

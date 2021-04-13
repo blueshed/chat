@@ -1,0 +1,48 @@
+:mod:`chat.static_handler`
+==========================
+
+.. py:module:: chat.static_handler
+
+.. autoapi-nested-parse::
+
+   We need authenticated access to static files
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   chat.static_handler.AuthStaticFileHandler
+
+
+
+.. class:: AuthStaticFileHandler(application: tornado.web.Application, request: tornado.httputil.HTTPServerRequest, **kwargs: Any)
+
+
+   Bases: :class:`chat.login.UserMixin`, :class:`tornado.web.StaticFileHandler`
+
+   This provide integration between tornado.web.authenticated
+   and tornado.web.StaticFileHandler.
+
+   .. method:: initialize(self, allow=None, **kwargs)
+
+      allow some paths through 
+
+
+   .. method:: get(self, path, include_body=True)
+      :async:
+
+      safe to return what you need 
+
+
+   .. method:: not_authenticated(self)
+
+      raise a redirect or error, tornado code dug out of a wrapper 
+
+
+

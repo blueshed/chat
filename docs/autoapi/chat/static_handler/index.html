@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chat.static_handler &#8212; Chat 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="chat.tables" href="../tables/index.html" />
+    <link rel="prev" title="chat.main" href="../main/index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-chat.static_handler">
+<span id="chat-static-handler"></span><h1><a class="reference internal" href="#module-chat.static_handler" title="chat.static_handler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.static_handler</span></code></a><a class="headerlink" href="#module-chat.static_handler" title="Permalink to this headline">¶</a></h1>
+<p>We need authenticated access to static files</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#chat.static_handler.AuthStaticFileHandler" title="chat.static_handler.AuthStaticFileHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AuthStaticFileHandler</span></code></a></p></td>
+<td><p>This provide integration between tornado.web.authenticated</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt id="chat.static_handler.AuthStaticFileHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">chat.static_handler.</span></code><code class="sig-name descname"><span class="pre">AuthStaticFileHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.web.Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tornado.httputil.HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/static_handler.html#AuthStaticFileHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.static_handler.AuthStaticFileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../login/index.html#chat.login.UserMixin" title="chat.login.UserMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">chat.login.UserMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tornado.web.StaticFileHandler</span></code></p>
+<p>This provide integration between tornado.web.authenticated
+and tornado.web.StaticFileHandler.</p>
+<dl class="py method">
+<dt id="chat.static_handler.AuthStaticFileHandler.initialize">
+<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/static_handler.html#AuthStaticFileHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.static_handler.AuthStaticFileHandler.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow some paths through</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.static_handler.AuthStaticFileHandler.get">
+<em class="property"><span class="pre">async</span> </em><code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_body</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/static_handler.html#AuthStaticFileHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.static_handler.AuthStaticFileHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>safe to return what you need</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="chat.static_handler.AuthStaticFileHandler.not_authenticated">
+<code class="sig-name descname"><span class="pre">not_authenticated</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chat/static_handler.html#AuthStaticFileHandler.not_authenticated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chat.static_handler.AuthStaticFileHandler.not_authenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>raise a redirect or error, tornado code dug out of a wrapper</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/favicon.ico" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">  chat</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat</span></code></a><ul>
+      <li>Previous: <a href="../main/index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.main</span></code></a></li>
+      <li>Next: <a href="../tables/index.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">chat.tables</span></code></a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Peter Bunyan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../../_sources/autoapi/chat/static_handler/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

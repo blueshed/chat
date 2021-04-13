@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chat.login &#8212; Chat 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for chat.login</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; our login handler &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span> <span class="nn">tornado.web</span> <span class="kn">import</span> <span class="n">RequestHandler</span><span class="p">,</span> <span class="n">HTTPError</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">tables</span>
+
+<div class="viewcode-block" id="log"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.log">[docs]</a><span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UserMixin"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.UserMixin">[docs]</a><span class="k">class</span> <span class="nc">UserMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; for use by authenticated handlers &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="UserMixin.cookie_name"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.UserMixin.cookie_name">[docs]</a>    <span class="k">def</span> <span class="nf">cookie_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; return the cookie_name declared in application settings&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cookie_name&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UserMixin.get_current_user"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.UserMixin.get_current_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; return the current user from the cookie &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_secure_cookie</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cookie_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span></div></div>
+
+
+<div class="viewcode-block" id="LoginHandler"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LoginHandler">[docs]</a><span class="k">class</span> <span class="nc">LoginHandler</span><span class="p">(</span><span class="n">UserMixin</span><span class="p">,</span> <span class="n">RequestHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; handle login get and post &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LoginHandler.get"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LoginHandler.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; render the form &quot;&quot;&quot;</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">next_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="s1">&#39;login.html&#39;</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">,</span> <span class="nb">next</span><span class="o">=</span><span class="n">next_</span><span class="p">,</span></div>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LoginHandler.post"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LoginHandler.post">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; handle login post &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">submit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;submit&#39;</span><span class="p">,</span> <span class="s1">&#39;login&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">email</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">password</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HTTPError</span><span class="p">(</span><span class="mi">403</span><span class="p">,</span> <span class="s1">&#39;email or password is None&#39;</span><span class="p">)</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">submit</span> <span class="o">==</span> <span class="s1">&#39;login&#39;</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_secure_cookie</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cookie_name</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;email or password incorrect&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># pylint: disable=W0703</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LoginHandler.login"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LoginHandler.login">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; can we login ? &quot;&quot;&quot;</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;engine&#39;</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">email</span><span class="p">,</span> <span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">password</span> <span class="o">==</span> <span class="n">password</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">email</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">user</span></div></div>
+
+
+<div class="viewcode-block" id="LogoutHandler"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LogoutHandler">[docs]</a><span class="k">class</span> <span class="nc">LogoutHandler</span><span class="p">(</span><span class="n">UserMixin</span><span class="p">,</span> <span class="n">RequestHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    removes the cookie from application settings</span>
+<span class="sd">    and redirects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LogoutHandler.get"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LogoutHandler.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; removes cookie and redirects to optional next argument &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_cookie</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cookie_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_argument</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">,</span> <span class="s1">&#39;/login&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/favicon.ico" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../autoapi/chat/index.html">  chat</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../chat.html">chat</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Peter Bunyan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
