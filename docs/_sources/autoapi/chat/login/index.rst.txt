@@ -74,7 +74,7 @@ Classes
 
    Bases: :class:`chat.login.UserMixin`, :class:`tornado.web.RequestHandler`
 
-   removes the cookie from application settings
+   removes the cookie defined in application settings
    and redirects.
 
    .. method:: get(self)
