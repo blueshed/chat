@@ -1,0 +1,67 @@
+:mod:`chat.redis_websocket`
+===========================
+
+.. py:module:: chat.redis_websocket
+
+.. autoapi-nested-parse::
+
+   We publish messages and subscribe to them 
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   chat.redis_websocket.RedisWebsocket
+
+
+
+.. data:: log
+   
+
+   
+
+.. class:: RedisWebsocket
+
+   Bases: :class:`chat.websocket.Websocket`
+
+   interrupt broadcast and send via redis topic 
+
+   .. method:: initialize(self, topic_name, redis_url, **kwargs)
+
+      allow some paths through 
+
+
+   .. method:: broadcast(self, message)
+      :async:
+
+      publishes a document to topic 
+
+
+   .. method:: local_broadcast(cls, message)
+      :classmethod:
+      :async:
+
+      tell clients locally 
+
+
+   .. method:: subscribe(cls, app, topic_name, redis_url)
+      :classmethod:
+      :async:
+
+      run forever coroutine that listens to topic and broadcasts 
+
+
+   .. method:: unsubscribe(cls, app)
+      :classmethod:
+      :async:
+
+      closing pool 
+
+
+

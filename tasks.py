@@ -44,7 +44,7 @@ def test(ctx):
 def docs_build(ctx):
     """ build docs """
     ctx.run('cd docsrc && make github')
-    ctx.run('touch ./docs/.nojekll')
+    ctx.run('touch ./docs/.nojekyll')
 
 
 @task

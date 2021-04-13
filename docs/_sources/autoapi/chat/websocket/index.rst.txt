@@ -54,8 +54,15 @@ Classes
 
 
    .. method:: on_message(self, message)
+      :async:
 
       we've said something, tell everyone 
+
+
+   .. method:: broadcast(self, message)
+      :async:
+
+      send a message to all clients 
 
 
 

@@ -17,6 +17,7 @@ Submodules
 
    login/index.rst
    main/index.rst
+   redis_websocket/index.rst
    static_handler/index.rst
    tables/index.rst
    websocket/index.rst

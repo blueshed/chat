@@ -93,19 +93,20 @@
         <span class="sd">&quot;&quot;&quot; can we login ? &quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;engine&#39;</span><span class="p">]</span>
-        <span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
                 <span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">email</span><span class="p">,</span> <span class="n">tables</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">password</span> <span class="o">==</span> <span class="n">password</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">row</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
-                <span class="n">user</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">email</span><span class="p">}</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">email</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">user</span></div></div>
 
 
 <div class="viewcode-block" id="LogoutHandler"><a class="viewcode-back" href="../../autoapi/chat/login/index.html#chat.login.LogoutHandler">[docs]</a><span class="k">class</span> <span class="nc">LogoutHandler</span><span class="p">(</span><span class="n">UserMixin</span><span class="p">,</span> <span class="n">RequestHandler</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    removes the cookie from application settings</span>
+<span class="sd">    removes the cookie defined in application settings</span>
 <span class="sd">    and redirects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
